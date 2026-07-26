@@ -1,20 +1,19 @@
-// src/config/database.js
-
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  host: "localhost",
-  port: 5432,
-  database: "center_db",
-  user: "postgres",
-  password: "admin",
+  connectionString:
+    process.env.DATABASE_URL ||
+    "postgresql://admin:2GDlKu6s02sNTjjoOjUeCA6PoGckiRKJ@dpg-d9j2pjjtqb8s739m7dug-a/center_db_20kz",
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 async function query(text, params) {
   const client = await pool.connect();
+
   try {
-    const result = await client.query(text, params);
-    return result;
+    return await client.query(text, params);
   } finally {
     client.release();
   }
