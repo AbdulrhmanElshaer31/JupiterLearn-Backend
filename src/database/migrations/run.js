@@ -1,6 +1,3 @@
-// src/database/migrations/run.js
-
-const { testConnection } = require("../../config/database");
 
 // Desktop tables
 const createGradesTable = require("./tables/grades.table");
@@ -29,8 +26,6 @@ const createAssignmentsTable = require("./tables/assignments.table");
 const createAssignmentSubmissionsTable = require("./tables/assignment_submissions.table");
 
 async function runMigrations() {
-  await testConnection();
-
   await createGradesTable();
   await createGroupsTable();
   await createStudentsTable();
