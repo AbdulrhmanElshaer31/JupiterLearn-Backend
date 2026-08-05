@@ -1,5 +1,4 @@
-
-const { query } = require('../../../config/database');
+const { query } = require("../../../config/database");
 
 async function createSettingsTable() {
   await query(`
@@ -24,15 +23,17 @@ async function createSettingsTable() {
       last_sync_at TEXT,
       sync_interval_minutes INTEGER DEFAULT 5,
       server_url TEXT DEFAULT '',
+      sync_priority TEXT DEFAULT 'default',
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
       is_synced INTEGER DEFAULT 1
     )
   `);
 
-  await query(`CREATE INDEX IF NOT EXISTS idx_settings_is_synced ON settings(is_synced)`);
-
-  console.log('settings table created');
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_settings_is_synced ON settings(is_synced)`,
+  );
+  console.log("settings table created");
 }
 
 module.exports = createSettingsTable;

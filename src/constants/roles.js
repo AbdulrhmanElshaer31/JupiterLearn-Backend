@@ -1,5 +1,6 @@
-
 module.exports = {
-  TEACHER: 'teacher',
-  ASSISTANT: 'assistant',
+  TEACHER: "teacher",
+  ASSISTANT: "assistant",
+  STUDENT: "student",
+  PARENT: "parent",
 };
