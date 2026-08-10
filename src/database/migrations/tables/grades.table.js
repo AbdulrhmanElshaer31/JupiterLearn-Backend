@@ -1,5 +1,4 @@
-
-const { query } = require('../../../config/database');
+const { query } = require("../../../config/database");
 
 async function createGradesTable() {
   await query(`
@@ -10,14 +9,21 @@ async function createGradesTable() {
       platform_enabled INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1
+      is_synced INTEGER DEFAULT 1,
+      deleted INTEGER DEFAULT 0,
+      whatsapp_group_link TEXT DEFAULT ''
     )
   `);
 
   await query(`CREATE INDEX IF NOT EXISTS idx_grades_name ON grades(name)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_grades_is_synced ON grades(is_synced)`);
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_grades_is_synced ON grades(is_synced)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_grades_deleted ON grades(deleted)`,
+  );
 
-  console.log('grades table created');
+  console.log("grades table created");
 }
 
 module.exports = createGradesTable;

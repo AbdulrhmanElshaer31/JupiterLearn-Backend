@@ -10,7 +10,9 @@ async function createMessageTemplatesTable() {
       sync_priority TEXT DEFAULT 'default',
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1
+      is_synced INTEGER DEFAULT 1,
+      deleted INTEGER DEFAULT 0
+
     )
   `);
 
@@ -20,7 +22,9 @@ async function createMessageTemplatesTable() {
   await query(
     `CREATE INDEX IF NOT EXISTS idx_message_templates_is_synced ON message_templates(is_synced)`,
   );
-
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_messages_deleted ON messages(deleted)`,
+  );
   console.log("message_templates table created");
 }
 

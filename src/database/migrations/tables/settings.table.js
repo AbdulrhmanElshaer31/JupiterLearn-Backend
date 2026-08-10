@@ -26,13 +26,19 @@ async function createSettingsTable() {
       sync_priority TEXT DEFAULT 'default',
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1
+      is_synced INTEGER DEFAULT 1,
+      deleted INTEGER DEFAULT 0
+
     )
   `);
 
   await query(
     `CREATE INDEX IF NOT EXISTS idx_settings_is_synced ON settings(is_synced)`,
   );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_settings_deleted ON settings(deleted)`,
+  );
+
   console.log("settings table created");
 }
 

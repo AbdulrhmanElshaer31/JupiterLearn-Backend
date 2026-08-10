@@ -1,5 +1,4 @@
-
-const { query } = require('../../../config/database');
+const { query } = require("../../../config/database");
 
 async function createSubscriptionsTable() {
   await query(`
@@ -13,16 +12,29 @@ async function createSubscriptionsTable() {
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
       is_synced INTEGER DEFAULT 1,
+      deleted INTEGER DEFAULT 0,
       UNIQUE(student_id, month)
+
     )
   `);
 
-  await query(`CREATE INDEX IF NOT EXISTS idx_subscriptions_student_id ON subscriptions(student_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_subscriptions_month ON subscriptions(month)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_subscriptions_is_synced ON subscriptions(is_synced)`);
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_subscriptions_student_id ON subscriptions(student_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_subscriptions_month ON subscriptions(month)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_subscriptions_is_synced ON subscriptions(is_synced)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_subscriptions_deleted ON subscriptions(deleted)`,
+  );
 
-  console.log('subscriptions table created');
+  console.log("subscriptions table created");
 }
 
 module.exports = createSubscriptionsTable;

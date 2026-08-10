@@ -1,5 +1,4 @@
-
-const { query } = require('../../../config/database');
+const { query } = require("../../../config/database");
 
 async function createExamsTable() {
   await query(`
@@ -13,16 +12,24 @@ async function createExamsTable() {
       notes TEXT,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1
+      is_synced INTEGER DEFAULT 1,
+      deleted INTEGER DEFAULT 0
+
     )
   `);
 
-  await query(`CREATE INDEX IF NOT EXISTS idx_exams_grade_id ON exams(grade_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_exams_group_id ON exams(group_id)`);
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_exams_grade_id ON exams(grade_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_exams_group_id ON exams(group_id)`,
+  );
   await query(`CREATE INDEX IF NOT EXISTS idx_exams_date ON exams(exam_date)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_exams_is_synced ON exams(is_synced)`);
-
-  console.log('exams table created');
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_exams_is_synced ON exams(is_synced)`,
+  );
+  await query(`CREATE INDEX IF NOT EXISTS idx_exams_deleted ON exams(deleted)`);
+  console.log("exams table created");
 }
 
 module.exports = createExamsTable;

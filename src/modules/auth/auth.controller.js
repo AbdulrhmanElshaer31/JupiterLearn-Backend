@@ -1,6 +1,9 @@
-//============== import service and generateToken ==============\\
+//============== import service and creatToken ==============\\
 const authService = require("./auth.service");
-const generateToken = require("../../utils/jwt");
+const {
+  creatToken,
+  verifyToken
+} = require("../../utils/jwt");
 const ROLES = require("../../constants/roles");
 const StudentLogin = async (req, res, next) => {
   try {
@@ -13,7 +16,7 @@ const StudentLogin = async (req, res, next) => {
       barcode:student.barcode,
       role: ROLES.STUDENT,
     };
-    const token = generateToken(payload);
+    const token = creatToken(payload);
     res.status(200).json({
       success: true,
       token,
@@ -38,7 +41,7 @@ const userLogin = async (req, res, next) => {
       id: user.id,
       role: user.role,
     };
-    const token = generateToken(payload);
+    const token = creatToken(payload);
     res.status(200).json({
       token,
       user: {

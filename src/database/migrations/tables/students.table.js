@@ -17,7 +17,9 @@ async function createStudentsTable() {
       active INTEGER DEFAULT 1,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1
+      is_synced INTEGER DEFAULT 1,
+      deleted INTEGER DEFAULT 0
+
     )
   `);
 
@@ -41,6 +43,9 @@ async function createStudentsTable() {
   );
   await query(
     `CREATE INDEX IF NOT EXISTS idx_students_parent_token ON students(parent_token)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_students_deleted ON students(deleted)`,
   );
 
   console.log("students table created");

@@ -1,5 +1,4 @@
-
-const { query } = require('../../../config/database');
+const { query } = require("../../../config/database");
 
 async function createPaymentsTable() {
   await query(`
@@ -14,16 +13,28 @@ async function createPaymentsTable() {
       payment_date DATE NOT NULL,
       notes TEXT,
       created_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1
+      is_synced INTEGER DEFAULT 1,
+      deleted INTEGER DEFAULT 0
+
     )
   `);
 
-  await query(`CREATE INDEX IF NOT EXISTS idx_payments_student_id ON payments(student_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_payments_subscription_id ON payments(subscription_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_payments_date ON payments(payment_date)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_payments_is_synced ON payments(is_synced)`);
-
-  console.log('payments table created');
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_payments_student_id ON payments(student_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_payments_subscription_id ON payments(subscription_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_payments_date ON payments(payment_date)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_payments_is_synced ON payments(is_synced)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_payments_deleted ON payments(deleted)`,
+  );
+  console.log("payments table created");
 }
 
 module.exports = createPaymentsTable;

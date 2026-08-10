@@ -12,7 +12,9 @@ async function createUsersTable() {
       sync_priority TEXT DEFAULT 'default',
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1
+      is_synced INTEGER DEFAULT 1,
+      deleted INTEGER DEFAULT 0
+
     )
   `);
 
@@ -21,9 +23,9 @@ async function createUsersTable() {
   await query(
     `CREATE INDEX IF NOT EXISTS idx_users_is_synced ON users(is_synced)`,
   );
+  await query(`CREATE INDEX IF NOT EXISTS idx_users_deleted ON users(deleted)`);
 
   console.log("users table created");
 }
 
 module.exports = createUsersTable;
-javascript;

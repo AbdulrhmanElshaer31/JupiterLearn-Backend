@@ -1,5 +1,4 @@
-
-const { query } = require('../../../config/database');
+const { query } = require("../../../config/database");
 
 async function createMessagesTable() {
   await query(`
@@ -17,18 +16,32 @@ async function createMessagesTable() {
       created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1
+      is_synced INTEGER DEFAULT 1,
+      deleted INTEGER DEFAULT 0
+
     )
   `);
 
-  await query(`CREATE INDEX IF NOT EXISTS idx_messages_student_id ON messages(student_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_messages_status ON messages(status)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_messages_template_type ON messages(template_type)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_messages_is_synced ON messages(is_synced)`);
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_messages_student_id ON messages(student_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_messages_status ON messages(status)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_messages_template_type ON messages(template_type)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_messages_is_synced ON messages(is_synced)`,
+  );
 
-  console.log('messages table created');
+  console.log("messages table created");
 }
 
 module.exports = createMessagesTable;

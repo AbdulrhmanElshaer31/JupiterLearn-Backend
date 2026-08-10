@@ -1,5 +1,4 @@
-
-const { query } = require('../../../config/database');
+const { query } = require("../../../config/database");
 
 async function createAttendanceTable() {
   await query(`
@@ -16,18 +15,35 @@ async function createAttendanceTable() {
       makeup_group_id INTEGER REFERENCES groups(id) ON DELETE SET NULL,
       notes TEXT,
       created_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1
+      is_synced INTEGER DEFAULT 1,
+      deleted INTEGER DEFAULT 0
+
     )
   `);
 
-  await query(`CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(attendance_date)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_attendance_student ON attendance(student_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_attendance_group ON attendance(group_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_attendance_status ON attendance(status)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_attendance_date_group ON attendance(attendance_date, group_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_attendance_is_synced ON attendance(is_synced)`);
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(attendance_date)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_attendance_student ON attendance(student_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_attendance_group ON attendance(group_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_attendance_status ON attendance(status)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_attendance_date_group ON attendance(attendance_date, group_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_attendance_is_synced ON attendance(is_synced)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_attendance_deleted ON attendance(deleted)`,
+  );
 
-  console.log('attendance table created');
+  console.log("attendance table created");
 }
 
 module.exports = createAttendanceTable;

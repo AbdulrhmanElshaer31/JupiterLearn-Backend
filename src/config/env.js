@@ -7,8 +7,10 @@ module.exports = {
   DB_PORT: Number(process.env.DB_PORT) || 5432,
   DB_NAME: process.env.DB_NAME || "center_db",
   DB_USER: process.env.DB_USER || "postgres",
-  DB_PASSWORD: process.env.DB_PASSWORD || "admin",
-  JWT_SECRET: process.env.JWT_SECRET || "your-secret-key",
-  NODE_ENV: process.env.NODE_ENV || "development",
+  DB_PASSWORD: process.env.DB_PASSWORD,
+  JWT_SECRET: process.env.JWT_SECRET,
+  NODE_ENV: process.env.NODE_ENV ,
   EXPIRES_DATE: process.env.EXPIRES_DATE || "7d",
+  API_USERNAME: process.env.API_USERNAME,
+  API_PASSWORD: process.env.API_PASSWORD
 };
