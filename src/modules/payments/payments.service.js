@@ -2,12 +2,18 @@ const { query } = require("../../config/database");
 const paymentQueries = require("./payments.queries");
 
 const getPaymentsByGradeAndMonth = async (gradeId, month) => {
-  const result = await query(paymentQueries.getPaymentsByGradeAndMonth, [gradeId, month]);
+  const result = await query(paymentQueries.getPaymentsByGradeAndMonth, [
+    gradeId,
+    month,
+  ]);
   return result.rows;
 };
 
 const getPaymentsByGroupAndMonth = async (groupId, month) => {
-  const result = await query(paymentQueries.getPaymentsByGroupAndMonth, [groupId, month]);
+  const result = await query(paymentQueries.getPaymentsByGroupAndMonth, [
+    groupId,
+    month,
+  ]);
   return result.rows;
 };
 
@@ -36,6 +42,10 @@ const getOverallPaymentStats = async () => {
   return result.rows[0];
 };
 
+const getAllStudentsPaymentStatus = async () => {
+  const result = await query(paymentQueries.getAllStudentsPaymentStatus);
+  return result.rows;
+};
 module.exports = {
   getPaymentsByGradeAndMonth,
   getPaymentsByGroupAndMonth,
@@ -43,5 +53,6 @@ module.exports = {
   getUnpaidStudentsCurrentMonth,
   getGradePaymentStats,
   getGroupPaymentStats,
-  getOverallPaymentStats
+  getOverallPaymentStats,
+  getAllStudentsPaymentStatus,
 };

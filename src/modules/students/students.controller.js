@@ -288,11 +288,63 @@ const getPlaylistVideos = async (req, res, next) => {
 
 const getAllStudents = async (req, res, next) => {
   try {
-    const students = await studentService.getAllStudents();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const search = req.query.search || "";
+    const gradeId = req.query.gradeId || null;
+    const groupId = req.query.groupId || null;
+
+    const students = await studentService.getAllStudents(
+      page,
+      limit,
+      search,
+      gradeId,
+      groupId,
+    );
+    const total = await studentService.getStudentsCount(
+      search,
+      gradeId,
+      groupId,
+    );
+
     return res.status(200).json({
       success: true,
       message: "Data Loaded!",
       data: students,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getStudentFullRecords = async (req, res, next) => {
+  try {
+    const studentId = req.params.studentId;
+    const records = await studentService.getStudentFullRecords(studentId);
+    return res.status(200).json({
+      success: true,
+      message: "Data Loaded!",
+      data: records,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getStudentFilters = async (req, res, next) => {
+  try {
+    const grades = await studentService.getAllGrades();
+    const groups = await studentService.getAllGroups();
+    return res.status(200).json({
+      success: true,
+      message: "Data Loaded!",
+      data: { grades, groups },
     });
   } catch (error) {
     next(error);
@@ -327,8 +379,81 @@ const getStudentById = async (req, res, next) => {
   }
 };
 
+const startOnlineExam = async (req, res, next) => {
+  try {
+    const examId = req.params.examId;
+    const data = await studentService.startOnlineExam(examId, req.clientId);
+    return res.status(200).json({
+      success: true,
+      message: "Exam Started!",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const answerQuestion = async (req, res, next) => {
+  try {
+    const examId = req.params.examId;
+    const { questionId, selectedOptionId } = req.body;
+    const data = await studentService.answerQuestion(
+      examId,
+      req.clientId,
+      questionId,
+      selectedOptionId,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Answer Saved!",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const submitOnlineExam = async (req, res, next) => {
+  try {
+    const attemptId = req.params.examId;
+    const { answers } = req.body;
+    const data = await studentService.submitOnlineExam(
+      attemptId,
+      req.clientId,
+      answers,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Exam Submitted!",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const submitAssignment = async (req, res, next) => {
+  try {
+    const assignmentId = req.params.assignmentId;
+    const filePath = req.file ? req.file.path : req.body.filePath;
+    const data = await studentService.submitAssignment(
+      assignmentId,
+      req.clientId,
+      filePath,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Assignment Submitted!",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getStudentProfile,
+  getStudentFilters,
   getStudentQuickStats,
   getAttendanceHistory,
   getMonthlyAttendanceStats,
@@ -348,4 +473,9 @@ module.exports = {
   getAllStudents,
   searchStudentByBarcode,
   getStudentById,
+  startOnlineExam,
+  answerQuestion,
+  submitOnlineExam,
+  submitAssignment,
+  getStudentFullRecords,
 };

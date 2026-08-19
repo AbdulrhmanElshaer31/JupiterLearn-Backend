@@ -1,5 +1,4 @@
-
-const { query } = require('../../../config/database');
+const { query } = require("../../../config/database");
 
 async function createStudentExamsTable() {
   await query(`
@@ -7,20 +6,26 @@ async function createStudentExamsTable() {
       id SERIAL PRIMARY KEY,
       exam_id INTEGER NOT NULL REFERENCES online_exams(id) ON DELETE CASCADE,
       student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-      score DECIMAL(10,2) NOT NULL,
-      total_questions INTEGER NOT NULL,
-      correct_answers INTEGER NOT NULL,
+      score DECIMAL(10,2) DEFAULT 0,
+      total_questions INTEGER DEFAULT 0,
+      correct_answers INTEGER DEFAULT 0,
       started_at TIMESTAMP NOT NULL,
-      submitted_at TIMESTAMP NOT NULL,
+      submitted_at TIMESTAMP,
       is_synced INTEGER DEFAULT 1
     )
   `);
 
-  await query(`CREATE INDEX IF NOT EXISTS idx_student_exams_exam_id ON student_exams(exam_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_student_exams_student_id ON student_exams(student_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_student_exams_is_synced ON student_exams(is_synced)`);
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_student_exams_exam_id ON student_exams(exam_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_student_exams_student_id ON student_exams(student_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_student_exams_is_synced ON student_exams(is_synced)`,
+  );
 
-  console.log('student_exams table created');
+  console.log("student_exams table created");
 }
 
 module.exports = createStudentExamsTable;

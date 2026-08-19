@@ -1,5 +1,3 @@
-// online_exams.controller.js
-
 const onlineExamService = require("./online_exams.service");
 
 const getAllOnlineExams = async (req, res, next) => {

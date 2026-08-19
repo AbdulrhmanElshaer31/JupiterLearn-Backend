@@ -8,9 +8,20 @@ SELECT
   p.is_active,
   p.created_by,
   p.created_at,
-  p.updated_at
+  p.updated_at,
+  COUNT(pv.id) AS videos_count,
+  (
+    SELECT v.youtube_url 
+    FROM playlist_videos pv2
+    JOIN videos v ON pv2.video_id = v.id
+    WHERE pv2.playlist_id = p.id
+    ORDER BY pv2.added_at ASC
+    LIMIT 1
+  ) AS thumbnail_url
 FROM playlists p
 LEFT JOIN grades g ON p.grade_id = g.id AND g.deleted = 0
+LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
+GROUP BY p.id, g.name
 ORDER BY p.created_at DESC
 `;
 
@@ -24,10 +35,21 @@ SELECT
   p.is_active,
   p.created_by,
   p.created_at,
-  p.updated_at
+  p.updated_at,
+  COUNT(pv.id) AS videos_count,
+  (
+    SELECT v.youtube_url 
+    FROM playlist_videos pv2
+    JOIN videos v ON pv2.video_id = v.id
+    WHERE pv2.playlist_id = p.id
+    ORDER BY pv2.added_at ASC
+    LIMIT 1
+  ) AS thumbnail_url
 FROM playlists p
 LEFT JOIN grades g ON p.grade_id = g.id AND g.deleted = 0
+LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
 WHERE p.id = $1
+GROUP BY p.id, g.name
 `;
 
 const getPlaylistsByGradeId = `
@@ -40,10 +62,21 @@ SELECT
   p.is_active,
   p.created_by,
   p.created_at,
-  p.updated_at
+  p.updated_at,
+  COUNT(pv.id) AS videos_count,
+  (
+    SELECT v.youtube_url 
+    FROM playlist_videos pv2
+    JOIN videos v ON pv2.video_id = v.id
+    WHERE pv2.playlist_id = p.id
+    ORDER BY pv2.added_at ASC
+    LIMIT 1
+  ) AS thumbnail_url
 FROM playlists p
 LEFT JOIN grades g ON p.grade_id = g.id AND g.deleted = 0
+LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
 WHERE p.grade_id = $1
+GROUP BY p.id, g.name
 ORDER BY p.created_at DESC
 `;
 
@@ -57,10 +90,21 @@ SELECT
   p.is_active,
   p.created_by,
   p.created_at,
-  p.updated_at
+  p.updated_at,
+  COUNT(pv.id) AS videos_count,
+  (
+    SELECT v.youtube_url 
+    FROM playlist_videos pv2
+    JOIN videos v ON pv2.video_id = v.id
+    WHERE pv2.playlist_id = p.id
+    ORDER BY pv2.added_at ASC
+    LIMIT 1
+  ) AS thumbnail_url
 FROM playlists p
 LEFT JOIN grades g ON p.grade_id = g.id AND g.deleted = 0
+LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
 WHERE p.is_active = 1
+GROUP BY p.id, g.name
 ORDER BY p.created_at DESC
 `;
 
@@ -74,10 +118,21 @@ SELECT
   p.is_active,
   p.created_by,
   p.created_at,
-  p.updated_at
+  p.updated_at,
+  COUNT(pv.id) AS videos_count,
+  (
+    SELECT v.youtube_url 
+    FROM playlist_videos pv2
+    JOIN videos v ON pv2.video_id = v.id
+    WHERE pv2.playlist_id = p.id
+    ORDER BY pv2.added_at ASC
+    LIMIT 1
+  ) AS thumbnail_url
 FROM playlists p
 LEFT JOIN grades g ON p.grade_id = g.id AND g.deleted = 0
+LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
 WHERE p.is_active = 0
+GROUP BY p.id, g.name
 ORDER BY p.created_at DESC
 `;
 
@@ -138,5 +193,5 @@ module.exports = {
   updatePlaylist,
   deletePlaylist,
   getPlaylistStats,
-  getGradePlaylistsStats
+  getGradePlaylistsStats,
 };

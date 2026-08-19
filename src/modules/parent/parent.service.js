@@ -1,3 +1,5 @@
+// parent.service.js
+
 const { query } = require("../../config/database");
 const parentQueries = require("./parent.queries");
 
@@ -11,8 +13,8 @@ const getParentDashboardAttendance = async (studentId) => {
   return result.rows[0];
 };
 
-const getLastFiveAbsences = async (studentId) => {
-  const result = await query(parentQueries.getLastFiveAbsences, [studentId]);
+const getAttendanceHistory = async (studentId) => {
+  const result = await query(parentQueries.getAttendanceHistory, [studentId]);
   return result.rows;
 };
 
@@ -21,18 +23,18 @@ const getParentDashboardPayments = async (studentId) => {
   return result.rows[0];
 };
 
-const getLastPayment = async (studentId) => {
-  const result = await query(parentQueries.getLastPayment, [studentId]);
-  return result.rows[0];
-};
-
-const getLastFivePaperExams = async (studentId) => {
-  const result = await query(parentQueries.getLastFivePaperExams, [studentId]);
+const getPaymentHistory = async (studentId) => {
+  const result = await query(parentQueries.getPaymentHistory, [studentId]);
   return result.rows;
 };
 
-const getLastFiveOnlineExams = async (studentId) => {
-  const result = await query(parentQueries.getLastFiveOnlineExams, [studentId]);
+const getPaperExams = async (studentId) => {
+  const result = await query(parentQueries.getPaperExams, [studentId]);
+  return result.rows;
+};
+
+const getOnlineExams = async (studentId) => {
+  const result = await query(parentQueries.getOnlineExams, [studentId]);
   return result.rows;
 };
 
@@ -46,14 +48,20 @@ const getGroupInfo = async (studentId) => {
   return result.rows[0];
 };
 
+const getStudentOverallStats = async (studentId) => {
+  const result = await query(parentQueries.getStudentOverallStats, [studentId]);
+  return result.rows[0];
+};
+
 module.exports = {
   getStudentByParentToken,
   getParentDashboardAttendance,
-  getLastFiveAbsences,
+  getAttendanceHistory,
   getParentDashboardPayments,
-  getLastPayment,
-  getLastFivePaperExams,
-  getLastFiveOnlineExams,
+  getPaymentHistory,
+  getPaperExams,
+  getOnlineExams,
   getParentDashboardAssignments,
-  getGroupInfo
+  getGroupInfo,
+  getStudentOverallStats
 };

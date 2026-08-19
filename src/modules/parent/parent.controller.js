@@ -1,3 +1,5 @@
+// parent.controller.js
+
 const parentService = require("./parent.service");
 
 const getParentDashboard = async (req, res, next) => {
@@ -8,14 +10,18 @@ const getParentDashboard = async (req, res, next) => {
 
     const studentId = student.id;
 
-    const attendance = await parentService.getParentDashboardAttendance(studentId);
-    const lastAbsences = await parentService.getLastFiveAbsences(studentId);
+    const attendance =
+      await parentService.getParentDashboardAttendance(studentId);
+    const attendanceHistory =
+      await parentService.getAttendanceHistory(studentId);
     const payments = await parentService.getParentDashboardPayments(studentId);
-    const lastPayment = await parentService.getLastPayment(studentId);
-    const paperExams = await parentService.getLastFivePaperExams(studentId);
-    const onlineExams = await parentService.getLastFiveOnlineExams(studentId);
-    const assignments = await parentService.getParentDashboardAssignments(studentId);
+    const paymentHistory = await parentService.getPaymentHistory(studentId);
+    const paperExams = await parentService.getPaperExams(studentId);
+    const onlineExams = await parentService.getOnlineExams(studentId);
+    const assignments =
+      await parentService.getParentDashboardAssignments(studentId);
     const groupInfo = await parentService.getGroupInfo(studentId);
+    const overallStats = await parentService.getStudentOverallStats(studentId);
 
     return res.status(200).json({
       success: true,
@@ -23,14 +29,15 @@ const getParentDashboard = async (req, res, next) => {
       data: {
         student,
         attendance,
-        lastAbsences,
+        attendanceHistory,
         payments,
-        lastPayment,
+        paymentHistory,
         paperExams,
         onlineExams,
         assignments,
-        groupInfo
-      }
+        groupInfo,
+        overallStats,
+      },
     });
   } catch (error) {
     next(error);
@@ -38,5 +45,5 @@ const getParentDashboard = async (req, res, next) => {
 };
 
 module.exports = {
-  getParentDashboard
+  getParentDashboard,
 };

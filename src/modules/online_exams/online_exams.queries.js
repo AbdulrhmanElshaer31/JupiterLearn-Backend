@@ -97,8 +97,11 @@ SELECT
   oe.id,
   oe.title,
   oe.full_mark,
+  oe.start_at,
+  oe.end_at,
   COUNT(q.id) AS questions_count,
   COUNT(DISTINCT se.id) AS students_attempted,
+  COUNT(DISTINCT se.student_id) AS total_students,
   ROUND(AVG(se.score)::numeric, 2) AS average_score,
   MAX(se.score) AS highest_score,
   MIN(se.score) AS lowest_score,
@@ -106,9 +109,9 @@ SELECT
   COUNT(CASE WHEN se.score < (oe.full_mark * 0.5) THEN 1 END) AS failed_count
 FROM online_exams oe
 LEFT JOIN questions q ON oe.id = q.exam_id
-LEFT JOIN student_exams se ON oe.id = se.exam_id
+LEFT JOIN student_exams se ON oe.id = se.exam_id AND se.submitted_at IS NOT NULL
 WHERE oe.id = $1
-GROUP BY oe.id, oe.title, oe.full_mark
+GROUP BY oe.id, oe.title, oe.full_mark, oe.start_at, oe.end_at
 `;
 
 const getGradeOnlineExamStats = `
@@ -120,7 +123,7 @@ SELECT
   ROUND(AVG(se.score)::numeric, 2) AS overall_average
 FROM grades g
 LEFT JOIN online_exams oe ON g.id = oe.grade_id
-LEFT JOIN student_exams se ON oe.id = se.exam_id
+LEFT JOIN student_exams se ON oe.id = se.exam_id AND se.submitted_at IS NOT NULL
 WHERE g.id = $1 AND g.deleted = 0
 GROUP BY g.id, g.name
 `;
@@ -163,5 +166,5 @@ module.exports = {
   getGradeOnlineExamStats,
   createOnlineExam,
   updateOnlineExam,
-  deleteOnlineExam
+  deleteOnlineExam,
 };

@@ -16,6 +16,7 @@ LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
 LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
 WHERE s.parent_token = $1 AND s.deleted = 0 AND s.active = 1
 `;
+
 const getParentDashboardAttendance = `
 SELECT 
   COUNT(a.id) AS total_days,
@@ -30,14 +31,17 @@ FROM attendance a
 WHERE a.student_id = $1 AND a.deleted = 0
 `;
 
-const getLastFiveAbsences = `
+const getAttendanceHistory = `
 SELECT 
   a.attendance_date,
-  a.status
+  a.status,
+  a.attendance_time,
+  a.method,
+  a.is_makeup,
+  a.notes
 FROM attendance a
-WHERE a.student_id = $1 AND a.status = 'absent' AND a.deleted = 0
+WHERE a.student_id = $1 AND a.deleted = 0
 ORDER BY a.attendance_date DESC
-LIMIT 5
 `;
 
 const getParentDashboardPayments = `
@@ -50,53 +54,71 @@ LEFT JOIN payments p ON sub.id = p.subscription_id AND p.student_id = $1 AND p.d
 WHERE sub.student_id = $1 AND sub.deleted = 0
 `;
 
-const getLastPayment = `
+const getPaymentHistory = `
 SELECT 
   p.amount,
-  p.payment_date
+  p.payment_date,
+  p.is_full_payment,
+  sub.month AS subscription_month,
+  sub.required_amount
 FROM payments p
+LEFT JOIN subscriptions sub ON p.subscription_id = sub.id
 WHERE p.student_id = $1 AND p.deleted = 0
 ORDER BY p.payment_date DESC
-LIMIT 1
 `;
 
-const getLastFivePaperExams = `
+const getPaperExams = `
 SELECT 
+  e.id,
   e.title,
   e.total_degree,
   e.exam_date,
+  e.notes,
   er.degree AS student_degree,
-  ROUND((er.degree::numeric / NULLIF(e.total_degree::numeric, 0)) * 100, 2) AS percentage
+  ROUND((er.degree::numeric / NULLIF(e.total_degree::numeric, 0)) * 100, 2) AS percentage,
+  CASE 
+    WHEN ROUND((er.degree::numeric / NULLIF(e.total_degree::numeric, 0)) * 100, 2) >= 50 THEN 'passed'
+    ELSE 'failed'
+  END AS status
 FROM exam_results er
 JOIN exams e ON er.exam_id = e.id AND e.deleted = 0
 WHERE er.student_id = $1 AND er.deleted = 0
 ORDER BY e.exam_date DESC
-LIMIT 5
 `;
 
-const getLastFiveOnlineExams = `
+const getOnlineExams = `
 SELECT 
+  oe.id,
   oe.title,
   oe.full_mark,
+  oe.duration_minutes,
   se.score,
   se.total_questions,
   se.correct_answers,
+  se.started_at,
+  se.submitted_at,
   ROUND((se.score::numeric / NULLIF(oe.full_mark::numeric, 0)) * 100, 2) AS percentage,
-  se.submitted_at
+  CASE 
+    WHEN se.score >= (oe.full_mark * 0.5) THEN 'passed'
+    ELSE 'failed'
+  END AS status
 FROM student_exams se
 JOIN online_exams oe ON se.exam_id = oe.id
 WHERE se.student_id = $1
 ORDER BY se.submitted_at DESC
-LIMIT 5
 `;
 
 const getParentDashboardAssignments = `
 SELECT 
+  a.id,
   a.title,
+  a.description,
   a.full_mark,
   a.deadline,
+  a.is_closed,
   asub.submitted_at,
   asub.score,
+  asub.feedback,
   CASE 
     WHEN asub.id IS NULL AND a.deadline < NOW() THEN 'overdue'
     WHEN asub.id IS NULL THEN 'pending'
@@ -107,7 +129,6 @@ FROM assignments a
 LEFT JOIN assignment_submissions asub ON a.id = asub.assignment_id AND asub.student_id = $1
 WHERE a.grade_id = (SELECT grade_id FROM students WHERE id = $1 AND deleted = 0)
 ORDER BY a.deadline DESC
-LIMIT 5
 `;
 
 const getGroupInfo = `
@@ -126,14 +147,28 @@ WHERE gr.id = (SELECT group_id FROM students WHERE id = $1 AND deleted = 0)
 GROUP BY gr.id, gr.name, gr.day, gr.days, gr.start_time, gr.end_time, gr.room
 `;
 
+const getStudentOverallStats = `
+SELECT 
+  ROUND(AVG(er.degree)::numeric, 2) AS avg_paper_score,
+  ROUND(AVG(se.score)::numeric, 2) AS avg_online_score,
+  COUNT(DISTINCT er.id) AS total_paper_exams,
+  COUNT(DISTINCT se.id) AS total_online_exams
+FROM students s
+LEFT JOIN exam_results er ON s.id = er.student_id AND er.deleted = 0
+LEFT JOIN student_exams se ON s.id = se.student_id
+WHERE s.id = $1
+GROUP BY s.id
+`;
+
 module.exports = {
   getStudentByParentToken,
   getParentDashboardAttendance,
-  getLastFiveAbsences,
+  getAttendanceHistory,
   getParentDashboardPayments,
-  getLastPayment,
-  getLastFivePaperExams,
-  getLastFiveOnlineExams,
+  getPaymentHistory,
+  getPaperExams,
+  getOnlineExams,
   getParentDashboardAssignments,
   getGroupInfo,
+  getStudentOverallStats,
 };

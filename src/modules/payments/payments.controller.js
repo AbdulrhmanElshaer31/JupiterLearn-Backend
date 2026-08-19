@@ -2,7 +2,10 @@ const paymentService = require("./payments.service");
 
 const getPaymentsByGradeAndMonth = async (req, res, next) => {
   try {
-    const payments = await paymentService.getPaymentsByGradeAndMonth(req.params.gradeId, req.params.month);
+    const payments = await paymentService.getPaymentsByGradeAndMonth(
+      req.params.gradeId,
+      req.params.month,
+    );
     return res.status(200).json({
       success: true,
       message: "Data Loaded!",
@@ -15,7 +18,10 @@ const getPaymentsByGradeAndMonth = async (req, res, next) => {
 
 const getPaymentsByGroupAndMonth = async (req, res, next) => {
   try {
-    const payments = await paymentService.getPaymentsByGroupAndMonth(req.params.groupId, req.params.month);
+    const payments = await paymentService.getPaymentsByGroupAndMonth(
+      req.params.groupId,
+      req.params.month,
+    );
     return res.status(200).json({
       success: true,
       message: "Data Loaded!",
@@ -93,6 +99,18 @@ const getOverallPaymentStats = async (req, res, next) => {
   }
 };
 
+const getAllStudentsPaymentStatus = async (req, res, next) => {
+  try {
+    const students = await paymentService.getAllStudentsPaymentStatus();
+    return res.status(200).json({
+      success: true,
+      message: "Data Loaded!",
+      data: students,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   getPaymentsByGradeAndMonth,
   getPaymentsByGroupAndMonth,
@@ -100,5 +118,6 @@ module.exports = {
   getUnpaidStudentsCurrentMonth,
   getGradePaymentStats,
   getGroupPaymentStats,
-  getOverallPaymentStats
+  getOverallPaymentStats,
+  getAllStudentsPaymentStatus,
 };

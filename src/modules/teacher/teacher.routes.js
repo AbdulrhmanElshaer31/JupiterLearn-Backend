@@ -22,6 +22,7 @@ const videoController = require("../videos/videos.controller");
 const playlistController = require("../playlists/playlists.controller");
 const playlistVideoController = require("../playlist_videos/playlist_videos.controller");
 const settingsController = require("../settings/settings.controller");
+const usersController = require("../users/users.controller");
 
 routes.get("/grades", gradesController.getAllGrades);
 routes.get("/grades/active", gradesController.getActiveGrades);
@@ -38,30 +39,89 @@ routes.get("/groups/:groupId/stats", groupsController.getGroupStats);
 
 routes.get("/students", studentsController.getAllStudents);
 routes.get("/students/search", studentsController.searchStudentByBarcode);
+routes.get("/students/filters", studentsController.getStudentFilters);
+routes.get(
+  "/students/:studentId/full-details",
+  studentsController.getStudentFullRecords,
+);
 routes.get("/students/:studentId", studentsController.getStudentById);
-routes.get("/students/:studentId/profile", studentsController.getStudentProfile);
-routes.get("/students/:studentId/stats", studentsController.getStudentQuickStats);
+routes.get(
+  "/students/:studentId/profile",
+  studentsController.getStudentProfile,
+);
+routes.get(
+  "/students/:studentId/stats",
+  studentsController.getStudentQuickStats,
+);
 
-routes.get("/attendance/overall", attendanceController.getOverallAttendanceStats);
-routes.get("/attendance/consecutive-absences", attendanceController.getStudentsWithThreeConsecutiveAbsences);
-routes.get("/attendance/grade/:gradeId/stats", attendanceController.getGradeAttendanceStats);
-routes.get("/attendance/group/:groupId/date/:date", attendanceController.getAttendanceByGroupAndDate);
-routes.get("/attendance/group/:groupId/month/:month", attendanceController.getAttendanceByGroupAndMonth);
+routes.get(
+  "/attendance/overall",
+  attendanceController.getOverallAttendanceStats,
+);
+routes.get(
+  "/attendance/consecutive-absences",
+  attendanceController.getStudentsWithThreeConsecutiveAbsences,
+);
+routes.get(
+  "/attendance/grade/:gradeId/stats",
+  attendanceController.getGradeAttendanceStats,
+);
+routes.get(
+  "/attendance/group/:groupId/date/:date",
+  attendanceController.getAttendanceByGroupAndDate,
+);
+routes.get(
+  "/attendance/group/:groupId/month/:month",
+  attendanceController.getAttendanceByGroupAndMonth,
+);
 
 routes.get("/payments/collections", paymentsController.getMonthlyCollections);
-routes.get("/payments/unpaid", paymentsController.getUnpaidStudentsCurrentMonth);
+routes.get(
+  "/payments/unpaid",
+  paymentsController.getUnpaidStudentsCurrentMonth,
+);
 routes.get("/payments/overall", paymentsController.getOverallPaymentStats);
-routes.get("/payments/grade/:gradeId/stats", paymentsController.getGradePaymentStats);
-routes.get("/payments/group/:groupId/stats", paymentsController.getGroupPaymentStats);
-routes.get("/payments/grade/:gradeId/month/:month", paymentsController.getPaymentsByGradeAndMonth);
-routes.get("/payments/group/:groupId/month/:month", paymentsController.getPaymentsByGroupAndMonth);
+routes.get(
+  "/payments/grade/:gradeId/stats",
+  paymentsController.getGradePaymentStats,
+);
+routes.get(
+  "/payments/group/:groupId/stats",
+  paymentsController.getGroupPaymentStats,
+);
+routes.get(
+  "/payments/grade/:gradeId/month/:month",
+  paymentsController.getPaymentsByGradeAndMonth,
+);
+routes.get(
+  "/payments/group/:groupId/month/:month",
+  paymentsController.getPaymentsByGroupAndMonth,
+);
 
-routes.get("/subscriptions/without-current", subscriptionsController.getStudentsWithoutSubscriptionCurrentMonth);
-routes.get("/subscriptions/overall", subscriptionsController.getOverallSubscriptionStats);
-routes.get("/subscriptions/student/:studentId", subscriptionsController.getStudentSubscriptions);
-routes.get("/subscriptions/month/:month", subscriptionsController.getSubscriptionsByMonth);
-routes.get("/subscriptions/grade/:gradeId/stats", subscriptionsController.getGradeSubscriptionStats);
-routes.get("/subscriptions/group/:groupId/stats", subscriptionsController.getGroupSubscriptionStats);
+routes.get(
+  "/subscriptions/without-current",
+  subscriptionsController.getStudentsWithoutSubscriptionCurrentMonth,
+);
+routes.get(
+  "/subscriptions/overall",
+  subscriptionsController.getOverallSubscriptionStats,
+);
+routes.get(
+  "/subscriptions/student/:studentId",
+  subscriptionsController.getStudentSubscriptions,
+);
+routes.get(
+  "/subscriptions/month/:month",
+  subscriptionsController.getSubscriptionsByMonth,
+);
+routes.get(
+  "/subscriptions/grade/:gradeId/stats",
+  subscriptionsController.getGradeSubscriptionStats,
+);
+routes.get(
+  "/subscriptions/group/:groupId/stats",
+  subscriptionsController.getGroupSubscriptionStats,
+);
 
 routes.get("/exams", examsController.getAllExams);
 routes.get("/exams/grade/:gradeId", examsController.getExamsByGradeId);
@@ -70,42 +130,108 @@ routes.get("/exams/grade/:gradeId/stats", examsController.getGradeExamStats);
 routes.get("/exams/:examId", examsController.getExamById);
 routes.get("/exams/:examId/stats", examsController.getExamStats);
 
-routes.get("/exam-results/grade/:gradeId/stats", examResultsController.getGradeExamResultsStats);
-routes.get("/exam-results/group/:groupId/stats", examResultsController.getGroupExamResultsStats);
+routes.get(
+  "/exam-results/grade/:gradeId/stats",
+  examResultsController.getGradeExamResultsStats,
+);
+routes.get(
+  "/exam-results/group/:groupId/stats",
+  examResultsController.getGroupExamResultsStats,
+);
 routes.get("/exam-results/:examId", examResultsController.getExamResults);
-routes.get("/exam-results/:examId/stats", examResultsController.getExamResultStats);
+routes.get(
+  "/exam-results/:examId/stats",
+  examResultsController.getExamResultStats,
+);
 
 routes.get("/online-exams", onlineExamController.getAllOnlineExams);
-routes.get("/online-exams/grade/:gradeId", onlineExamController.getOnlineExamsByGradeId);
-routes.get("/online-exams/group/:groupId", onlineExamController.getOnlineExamsByGroupId);
-routes.get("/online-exams/stats/grade/:gradeId", onlineExamController.getGradeOnlineExamStats);
+routes.get(
+  "/online-exams/grade/:gradeId",
+  onlineExamController.getOnlineExamsByGradeId,
+);
+routes.get(
+  "/online-exams/group/:groupId",
+  onlineExamController.getOnlineExamsByGroupId,
+);
+routes.get(
+  "/online-exams/stats/grade/:gradeId",
+  onlineExamController.getGradeOnlineExamStats,
+);
 routes.get("/online-exams/:examId", onlineExamController.getOnlineExamById);
-routes.get("/online-exams/stats/:examId", onlineExamController.getOnlineExamStats);
+routes.get(
+  "/online-exams/stats/:examId",
+  onlineExamController.getOnlineExamStats,
+);
 
 routes.get("/questions/exam/:examId", questionController.getQuestionsByExamId);
 routes.get("/questions/:questionId", questionController.getQuestionById);
 
-routes.get("/options/question/:questionId", optionController.getOptionsByQuestionId);
+routes.get(
+  "/options/question/:questionId",
+  optionController.getOptionsByQuestionId,
+);
 routes.get("/options/:optionId", optionController.getOptionById);
 
-routes.get("/student-exams/grade/:gradeId/stats", studentExamController.getGradeExamAttemptsStats);
-routes.get("/student-exams/group/:groupId/stats", studentExamController.getGroupExamAttemptsStats);
-routes.get("/student-exams/:examId", studentExamController.getStudentExamsByExamId);
-routes.get("/student-exams/:examId/stats", studentExamController.getExamAttemptStats);
+routes.get(
+  "/student-exams/grade/:gradeId/stats",
+  studentExamController.getGradeExamAttemptsStats,
+);
+routes.get(
+  "/student-exams/group/:groupId/stats",
+  studentExamController.getGroupExamAttemptsStats,
+);
+routes.get(
+  "/student-exams/:examId",
+  studentExamController.getStudentExamsByExamId,
+);
+routes.get(
+  "/student-exams/:examId/stats",
+  studentExamController.getExamAttemptStats,
+);
 
-routes.get("/student-answers/question/:questionId/stats", studentAnswerController.getQuestionAnswerStats);
-routes.get("/student-answers/question/:questionId/options", studentAnswerController.getMostSelectedOptions);
+routes.get(
+  "/student-answers/question/:questionId/stats",
+  studentAnswerController.getQuestionAnswerStats,
+);
+routes.get(
+  "/student-answers/question/:questionId/options",
+  studentAnswerController.getMostSelectedOptions,
+);
 
 routes.get("/assignments", assignmentController.getAllAssignments);
-routes.get("/assignments/grade/:gradeId", assignmentController.getAssignmentsByGradeId);
-routes.get("/assignments/group/:groupId", assignmentController.getAssignmentsByGroupId);
-routes.get("/assignments/:assignmentId", assignmentController.getAssignmentById);
+routes.get(
+  "/assignments/grade/:gradeId",
+  assignmentController.getAssignmentsByGradeId,
+);
+routes.get(
+  "/assignments/group/:groupId",
+  assignmentController.getAssignmentsByGroupId,
+);
+routes.get(
+  "/assignments/:assignmentId",
+  assignmentController.getAssignmentById,
+);
 
-routes.get("/assignment-submissions/stats/grade/:gradeId", assignmentSubmissionController.getGradeAssignmentSubmissionStats);
-routes.get("/assignment-submissions/stats/group/:groupId", assignmentSubmissionController.getGroupAssignmentSubmissionStats);
-routes.get("/assignment-submissions/assignment/:assignmentId", assignmentSubmissionController.getSubmissionsByAssignmentId);
-routes.get("/assignment-submissions/assignment/:assignmentId/student/:studentId", assignmentSubmissionController.getStudentSubmission);
-routes.get("/assignment-submissions/stats/assignment/:assignmentId", assignmentSubmissionController.getAssignmentSubmissionStats);
+routes.get(
+  "/assignment-submissions/stats/grade/:gradeId",
+  assignmentSubmissionController.getGradeAssignmentSubmissionStats,
+);
+routes.get(
+  "/assignment-submissions/stats/group/:groupId",
+  assignmentSubmissionController.getGroupAssignmentSubmissionStats,
+);
+routes.get(
+  "/assignment-submissions/assignment/:assignmentId",
+  assignmentSubmissionController.getSubmissionsByAssignmentId,
+);
+routes.get(
+  "/assignment-submissions/assignment/:assignmentId/student/:studentId",
+  assignmentSubmissionController.getStudentSubmission,
+);
+routes.get(
+  "/assignment-submissions/stats/assignment/:assignmentId",
+  assignmentSubmissionController.getAssignmentSubmissionStats,
+);
 
 routes.get("/videos", videoController.getAllVideos);
 routes.get("/videos/active", videoController.getActiveVideos);
@@ -116,12 +242,23 @@ routes.get("/videos/:videoId", videoController.getVideoById);
 routes.get("/playlists", playlistController.getAllPlaylists);
 routes.get("/playlists/active", playlistController.getActivePlaylists);
 routes.get("/playlists/inactive", playlistController.getInactivePlaylists);
-routes.get("/playlists/grade/:gradeId", playlistController.getPlaylistsByGradeId);
-routes.get("/playlists/stats/grade/:gradeId", playlistController.getGradePlaylistsStats);
+routes.get(
+  "/playlists/grade/:gradeId",
+  playlistController.getPlaylistsByGradeId,
+);
+routes.get(
+  "/playlists/stats/grade/:gradeId",
+  playlistController.getGradePlaylistsStats,
+);
 routes.get("/playlists/:playlistId", playlistController.getPlaylistById);
 routes.get("/playlists/stats/:playlistId", playlistController.getPlaylistStats);
 
-routes.get("/playlist-videos/playlist/:playlistId", playlistVideoController.getPlaylistVideos);
+routes.get(
+  "/playlist-videos/playlist/:playlistId",
+  playlistVideoController.getPlaylistVideos,
+);
+
+routes.get("/assistants", usersController.getAllAssistants);
 
 routes.put("/settings/change-password", settingsController.changeUserPassword);
 

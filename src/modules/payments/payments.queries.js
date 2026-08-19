@@ -150,6 +150,39 @@ LEFT JOIN LATERAL (
 ) paid ON true
 WHERE s.deleted = 0 AND s.active = 1
 `;
+
+const getAllStudentsPaymentStatus = `
+SELECT 
+  s.id,
+  s.barcode,
+  s.full_name,
+  s.grade_id,
+  g.name AS grade_name,
+  s.group_id,
+  gr.name AS group_name,
+  COALESCE(paid.total_paid, 0) AS paid_amount,
+  sub.required_amount,
+  CASE 
+    WHEN COALESCE(paid.total_paid, 0) >= sub.required_amount THEN 'paid'
+    ELSE 'unpaid'
+  END AS payment_status
+FROM students s
+LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
+LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
+LEFT JOIN subscriptions sub ON s.id = sub.student_id 
+  AND EXTRACT(MONTH FROM sub.month) = EXTRACT(MONTH FROM CURRENT_DATE)
+  AND EXTRACT(YEAR FROM sub.month) = EXTRACT(YEAR FROM CURRENT_DATE)
+  AND sub.deleted = 0
+LEFT JOIN LATERAL (
+  SELECT COALESCE(SUM(p.amount), 0) AS total_paid
+  FROM payments p
+  WHERE p.student_id = s.id 
+    AND p.subscription_id = sub.id
+    AND p.deleted = 0
+) paid ON true
+WHERE s.deleted = 0 AND s.active = 1
+ORDER BY s.full_name ASC
+`;
 module.exports = {
   getPaymentsByGradeAndMonth,
   getPaymentsByGroupAndMonth,
@@ -158,4 +191,5 @@ module.exports = {
   getGradePaymentStats,
   getGroupPaymentStats,
   getOverallPaymentStats,
+  getAllStudentsPaymentStatus
 };

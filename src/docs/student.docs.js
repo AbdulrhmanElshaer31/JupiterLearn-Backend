@@ -394,6 +394,7 @@
  *       200:
  *         description: Videos list
  */
+
 /**
  * @swagger
  * /api/student/settings/change-password:
@@ -413,4 +414,164 @@
  *               newPassword: { type: string }
  *               confirmPassword: { type: string }
  *     responses: { 200: { description: Password changed } }
+ */
+
+/**
+ * @swagger
+ * /api/student/exams/online/{examId}/start:
+ *   post:
+ *     summary: Start online exam
+ *     description: Start an online exam attempt and get questions
+ *     tags: [Student]
+ *     security:
+ *       - ApiAuth: []
+ *       - ClientToken: []
+ *     parameters:
+ *       - in: path
+ *         name: examId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Exam started with questions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     attempt_id:
+ *                       type: integer
+ *                     questions:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           question_text:
+ *                             type: string
+ *                           type:
+ *                             type: string
+ *                           options:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 id:
+ *                                   type: integer
+ *                                 option_text:
+ *                                   type: string
+ */
+
+/**
+ * @swagger
+ * /api/student/exams/online/{examId}/answer:
+ *   post:
+ *     summary: Answer exam question
+ *     description: Submit an answer for a question in active exam
+ *     tags: [Student]
+ *     security:
+ *       - ApiAuth: []
+ *       - ClientToken: []
+ *     parameters:
+ *       - in: path
+ *         name: examId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [questionId, selectedOptionId]
+ *             properties:
+ *               questionId:
+ *                 type: integer
+ *               selectedOptionId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Answer saved
+ */
+
+/**
+ * @swagger
+ * /api/student/exams/online/{examId}/submit:
+ *   post:
+ *     summary: Submit online exam
+ *     description: Submit and finalize the exam attempt
+ *     tags: [Student]
+ *     security:
+ *       - ApiAuth: []
+ *       - ClientToken: []
+ *     parameters:
+ *       - in: path
+ *         name: examId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Exam submitted with score
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     attempt_id:
+ *                       type: integer
+ *                     score:
+ *                       type: number
+ *                     total_questions:
+ *                       type: integer
+ *                     correct_answers:
+ *                       type: integer
+ */
+
+/**
+ * @swagger
+ * /api/student/assignments/{assignmentId}/submit:
+ *   post:
+ *     summary: Submit assignment
+ *     description: Submit an assignment file
+ *     tags: [Student]
+ *     security:
+ *       - ApiAuth: []
+ *       - ClientToken: []
+ *     parameters:
+ *       - in: path
+ *         name: assignmentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [filePath]
+ *             properties:
+ *               filePath:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Assignment submitted
  */

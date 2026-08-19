@@ -1,3 +1,5 @@
+// modules/students/students.routes.js
+
 const express = require("express");
 const routes = express.Router();
 const stdController = require("./students.controller");
@@ -33,5 +35,14 @@ routes.put(
   "/settings/change-password",
   settingsController.changeStudentPassword,
 );
+routes.post("/exams/online/:examId/start", stdController.startOnlineExam);
+routes.post("/exams/online/:examId/answer", stdController.answerQuestion);
+routes.post("/exams/online/:examId/submit", stdController.submitOnlineExam);
+routes.post(
+  "/assignments/:assignmentId/submit",
+  stdController.submitAssignment,
+);
+routes.get("/full-records/:studentId", stdController.getStudentFullRecords);
+routes.get("/filters", stdController.getStudentFilters);
 
 module.exports = routes;

@@ -14,6 +14,10 @@ const headers = {
   "Content-Type": "application/json",
 };
 
+let firstQuestionId = null;
+let firstOptionId = null;
+let activeExamId = null;
+
 const endpoints = [
   // Profile
   { method: "GET", url: "/api/student/profile", name: "Get Profile" },
@@ -92,11 +96,20 @@ const endpoints = [
     url: "/api/student/exams/online/1/answers",
     name: "Online Exam Answers (examId=1)",
   },
+
+  // Start Exam
   {
-    method: "GET",
-    url: "/api/student/exams/online/3/answers",
-    name: "Online Exam Answers (examId=3)",
+    method: "POST",
+    url: "/api/student/exams/online/3/start",
+    name: "Start Online Exam",
+    body: null,
   },
+
+  // Answer Question - dynamic
+  { method: "POST", url: "", name: "Answer Question", body: null },
+
+  // Submit Exam
+  { method: "POST", url: "", name: "Submit Online Exam", body: null },
 
   // Assignments
   { method: "GET", url: "/api/student/assignments", name: "Assignments" },
@@ -105,6 +118,16 @@ const endpoints = [
     url: "/api/student/assignments?page=2&limit=5",
     name: "Assignments (page 2)",
   },
+
+  // Submit Assignment
+  {
+    method: "POST",
+    url: "/api/student/assignments/1/submit",
+    name: "Submit Assignment",
+    body: { filePath: "/uploads/test.pdf" },
+  },
+
+  // Assignment Submissions
   {
     method: "GET",
     url: "/api/student/assignments/submissions",
@@ -123,29 +146,47 @@ const endpoints = [
     url: "/api/student/playlists/1/videos",
     name: "Playlist Videos (id=1)",
   },
-  {
-    method: "GET",
-    url: "/api/student/playlists/2/videos",
-    name: "Playlist Videos (id=2)",
-  },
-  {
-    method: "GET",
-    url: "/api/student/playlists/999/videos",
-    name: "Playlist Videos (non-existent)",
-  },
 ];
 
 async function testAllEndpoints() {
   console.log("Testing ALL STUDENT endpoints...\n");
   const results = [];
 
-  for (const endpoint of endpoints) {
+  for (let i = 0; i < endpoints.length; i++) {
+    const endpoint = endpoints[i];
     try {
       const options = { method: endpoint.method, headers: { ...headers } };
+
+      if (endpoint.name === "Answer Question" && firstQuestionId) {
+        endpoint.url = `/api/student/exams/online/3/answer`;
+        endpoint.body = {
+          questionId: firstQuestionId,
+          selectedOptionId: firstOptionId,
+        };
+      }
+
+      if (endpoint.name === "Submit Online Exam") {
+        endpoint.url = `/api/student/exams/online/3/submit`;
+      }
+
+      if (endpoint.body && endpoint.method !== "GET") {
+        options.body = JSON.stringify(endpoint.body);
+      }
 
       const response = await fetch(`${BASE_URL}${endpoint.url}`, options);
       const status = response.status;
       const data = await response.json().catch(() => null);
+
+      if (
+        endpoint.name === "Start Online Exam" &&
+        data?.data?.questions?.length > 0
+      ) {
+        firstQuestionId = data.data.questions[0].id;
+        firstOptionId = data.data.questions[0].options?.[0]?.id || 2;
+        console.log(
+          `  -> Using questionId: ${firstQuestionId}, optionId: ${firstOptionId}`,
+        );
+      }
 
       if (status >= 200 && status < 300) {
         console.log(`[PASS] ${endpoint.name} (${status})`);

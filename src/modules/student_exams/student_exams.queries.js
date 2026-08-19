@@ -20,6 +20,8 @@ SELECT
   oe.id,
   oe.title,
   oe.full_mark,
+  oe.start_at,
+  oe.end_at,
   COUNT(se.id) AS total_attempts,
   COUNT(DISTINCT se.student_id) AS total_students,
   ROUND(AVG(se.score)::numeric, 2) AS average_score,
@@ -29,7 +31,7 @@ SELECT
 FROM online_exams oe
 LEFT JOIN student_exams se ON oe.id = se.exam_id
 WHERE oe.id = $1
-GROUP BY oe.id, oe.title, oe.full_mark
+GROUP BY oe.id, oe.title, oe.full_mark, oe.start_at, oe.end_at
 `;
 
 const getGradeExamAttemptsStats = `
@@ -37,6 +39,8 @@ SELECT
   oe.id,
   oe.title,
   oe.full_mark,
+  oe.start_at,
+  oe.end_at,
   COUNT(se.id) AS total_attempts,
   COUNT(DISTINCT se.student_id) AS total_students,
   ROUND(AVG(se.score)::numeric, 2) AS average_score,
@@ -45,7 +49,7 @@ SELECT
 FROM online_exams oe
 LEFT JOIN student_exams se ON oe.id = se.exam_id
 WHERE oe.grade_id = $1
-GROUP BY oe.id, oe.title, oe.full_mark
+GROUP BY oe.id, oe.title, oe.full_mark, oe.start_at, oe.end_at
 ORDER BY oe.title ASC
 `;
 
@@ -54,6 +58,8 @@ SELECT
   oe.id,
   oe.title,
   oe.full_mark,
+  oe.start_at,
+  oe.end_at,
   COUNT(se.id) AS total_attempts,
   COUNT(DISTINCT se.student_id) AS total_students,
   ROUND(AVG(se.score)::numeric, 2) AS average_score,
@@ -62,7 +68,7 @@ SELECT
 FROM online_exams oe
 LEFT JOIN student_exams se ON oe.id = se.exam_id
 WHERE oe.group_id = $1
-GROUP BY oe.id, oe.title, oe.full_mark
+GROUP BY oe.id, oe.title, oe.full_mark, oe.start_at, oe.end_at
 ORDER BY oe.title ASC
 `;
 
