@@ -1,8 +1,7 @@
-// modules/assistant/assistant.routes.js
-
 const express = require("express");
 const routes = express.Router();
 
+// Controllers
 const gradesController = require("../grades/grades.controller");
 const groupsController = require("../groups/groups.controller");
 const studentsController = require("../students/students.controller");
@@ -21,34 +20,220 @@ const assignmentSubmissionController = require("../assignment_submissions/assign
 const videoController = require("../videos/videos.controller");
 const playlistController = require("../playlists/playlists.controller");
 const playlistVideoController = require("../playlist_videos/playlist_videos.controller");
-const settingsController = require("../settings/settings.controller");
+const whatsappController = require("../whatsapp_messages/whatsapp_messages.controller");
 
+// Middleware
+const centerManagementAuth = require("../../middlewares/centerManagementAuth.middleware");
+const onlineManagementAuth = require("../../middlewares/onlineManagementAuth.middleware");
+
+/* ============================================
+   ONLINE MANAGEMENT ROUTES
+   (متاحة للمساعدين بـ online_management أو center_management)
+   ============================================ */
+
+routes.use(onlineManagementAuth);
+
+// Online Exams - CRUD كامل
+routes.get("/online-exams", onlineExamController.getAllOnlineExams);
+routes.get(
+  "/online-exams/available",
+  onlineExamController.getAvailableOnlineExams,
+);
+routes.get("/online-exams/expired", onlineExamController.getExpiredOnlineExams);
+routes.get(
+  "/online-exams/grade/:gradeId",
+  onlineExamController.getOnlineExamsByGradeId,
+);
+routes.get(
+  "/online-exams/group/:groupId",
+  onlineExamController.getOnlineExamsByGroupId,
+);
+routes.get(
+  "/online-exams/stats/grade/:gradeId",
+  onlineExamController.getGradeOnlineExamStats,
+);
+routes.get(
+  "/online-exams/stats/:examId",
+  onlineExamController.getOnlineExamStats,
+);
+routes.get("/online-exams/:examId", onlineExamController.getOnlineExamById);
+routes.post("/online-exams", onlineExamController.createOnlineExam);
+routes.put("/online-exams/:examId", onlineExamController.updateOnlineExam);
+routes.delete(
+  "/online-exams/:examId",
+  onlineExamController.softDeleteOnlineExam,
+);
+routes.delete(
+  "/online-exams/:examId/permanent",
+  onlineExamController.hardDeleteOnlineExam,
+);
+
+// Questions - CRUD
+routes.get("/questions/exam/:examId", questionController.getQuestionsByExamId);
+routes.get("/questions/:questionId", questionController.getQuestionById);
+routes.get(
+  "/questions/:questionId/download",
+  questionController.downloadQuestionFile,
+);
+routes.post("/questions", questionController.createQuestion);
+routes.put("/questions/:questionId", questionController.updateQuestion);
+routes.delete("/questions/:questionId", questionController.deleteQuestion);
+
+// Options - CRUD
+routes.get(
+  "/options/question/:questionId",
+  optionController.getOptionsByQuestionId,
+);
+routes.get("/options/:optionId", optionController.getOptionById);
+routes.post("/options", optionController.createOption);
+routes.put("/options/:optionId", optionController.updateOption);
+routes.delete("/options/:optionId", optionController.deleteOption);
+
+// Assignments - CRUD
+routes.get("/assignments", assignmentController.getAllAssignments);
+routes.get(
+  "/assignments/grade/:gradeId",
+  assignmentController.getAssignmentsByGradeId,
+);
+routes.get(
+  "/assignments/group/:groupId",
+  assignmentController.getAssignmentsByGroupId,
+);
+routes.get(
+  "/assignments/:assignmentId/download",
+  assignmentController.downloadAssignment,
+);
+routes.get(
+  "/assignments/:assignmentId",
+  assignmentController.getAssignmentById,
+);
+routes.post("/assignments", assignmentController.createAssignment);
+routes.put("/assignments/:assignmentId", assignmentController.updateAssignment);
+routes.delete(
+  "/assignments/:assignmentId",
+  assignmentController.softDeleteAssignment,
+);
+routes.delete(
+  "/assignments/:assignmentId/permanent",
+  assignmentController.hardDeleteAssignment,
+);
+
+// Assignment Submissions - Grade
+routes.get(
+  "/assignment-submissions/stats/grade/:gradeId",
+  assignmentSubmissionController.getGradeAssignmentSubmissionStats,
+);
+routes.get(
+  "/assignment-submissions/stats/group/:groupId",
+  assignmentSubmissionController.getGroupAssignmentSubmissionStats,
+);
+routes.get(
+  "/assignment-submissions/assignment/:assignmentId",
+  assignmentSubmissionController.getSubmissionsByAssignmentId,
+);
+routes.get(
+  "/assignment-submissions/assignment/:assignmentId/student/:studentId",
+  assignmentSubmissionController.getStudentSubmission,
+);
+routes.get(
+  "/assignment-submissions/assignment/:assignmentId/submitted-students",
+  assignmentSubmissionController.getSubmittedStudents,
+);
+routes.get(
+  "/assignment-submissions/assignment/:assignmentId/not-submitted-students",
+  assignmentSubmissionController.getNotSubmittedStudents,
+);
+routes.get(
+  "/assignment-submissions/stats/assignment/:assignmentId",
+  assignmentSubmissionController.getAssignmentSubmissionStats,
+);
+routes.put(
+  "/assignment-submissions/:submissionId/grade",
+  assignmentSubmissionController.gradeSubmission,
+);
+
+// Videos - CRUD
+routes.get("/videos", videoController.getAllVideos);
+routes.get("/videos/grade/:gradeId", videoController.getVideosByGradeId);
+routes.get("/videos/:videoId/download", videoController.downloadVideoFile);
+routes.get("/videos/:videoId", videoController.getVideoById);
+routes.post("/videos", videoController.createVideo);
+routes.put("/videos/:videoId", videoController.updateVideo);
+routes.delete("/videos/:videoId", videoController.hardDeleteVideo);
+
+// Playlists - CRUD
+routes.get("/playlists", playlistController.getAllPlaylists);
+routes.get(
+  "/playlists/grade/:gradeId",
+  playlistController.getPlaylistsByGradeId,
+);
+routes.get("/playlists/:playlistId", playlistController.getPlaylistById);
+routes.post("/playlists", playlistController.createPlaylist);
+routes.put("/playlists/:playlistId", playlistController.updatePlaylist);
+routes.delete("/playlists/:playlistId", playlistController.hardDeletePlaylist);
+
+// Playlist Videos
+routes.get(
+  "/playlist-videos/playlist/:playlistId",
+  playlistVideoController.getPlaylistVideos,
+);
+routes.post("/playlist-videos", playlistVideoController.addVideoToPlaylist);
+routes.delete(
+  "/playlist-videos/:id",
+  playlistVideoController.removeVideoFromPlaylist,
+);
+
+/* ============================================
+   CENTER MANAGEMENT ROUTES
+   (متاحة للمساعدين بـ center_management فقط)
+   ============================================ */
+
+routes.use(centerManagementAuth);
+
+// Grades - CRUD
 routes.get("/grades", gradesController.getAllGrades);
-routes.get("/grades/active", gradesController.getActiveGrades);
-routes.get("/grades/inactive", gradesController.getInactiveGrades);
-routes.get("/grades/stats/all", gradesController.getAllGradesStats);
-routes.get("/grades/:gradeId", gradesController.getGradeById);
-routes.get("/grades/:gradeId/stats", gradesController.getGradeStats);
+routes.get("/grades/groups-count", gradesController.getGradesWithGroupsCount);
 routes.get(
-  "/payments/students-status",
-  paymentsController.getAllStudentsPaymentStatus,
+  "/grades/students-count",
+  gradesController.getGradesWithStudentsCount,
 );
+routes.get("/grades/stats", gradesController.getAllGradesStats);
+routes.post("/grades/find", gradesController.findGradeByName);
+routes.get("/grades/:id", gradesController.getGradeById);
+routes.get("/grades/:id/stats", gradesController.getGradeStats);
+routes.post("/grades", gradesController.createGrade);
+routes.put("/grades/:id", gradesController.updateGrade);
+routes.delete("/grades/:id", gradesController.softDeleteGrade);
+routes.delete("/grades/:id/permanent", gradesController.hardDeleteGrade);
 
+// Groups - CRUD
 routes.get("/groups", groupsController.getAllGroups);
-routes.get("/groups/stats/all", groupsController.getAllGroupsStats);
-routes.get("/groups/grade/:gradeId", groupsController.getGroupsByGradeId);
-routes.get("/groups/:groupId", groupsController.getGroupById);
-routes.get("/groups/:groupId/stats", groupsController.getGroupStats);
-
-// Students Routes - بالترتيب الصحيح
-routes.get("/students", studentsController.getAllStudents);
-routes.get("/students/search", studentsController.searchStudentByBarcode);
-routes.get("/students/filters", studentsController.getStudentFilters);
+routes.get("/groups/with-grade-name", groupsController.getGroupsWithGradeName);
 routes.get(
-  "/students/:studentId/full-records",
-  studentsController.getStudentFullRecords,
+  "/groups/students-count",
+  groupsController.getGroupsWithStudentsCount,
 );
-routes.get("/students/:studentId", studentsController.getStudentById);
+routes.get("/groups/stats", groupsController.getAllGroupsStats);
+routes.post("/groups/find", groupsController.findGroupByName);
+routes.get("/groups/grade/:gradeId", groupsController.getGroupsByGradeId);
+routes.get("/groups/:id", groupsController.getGroupById);
+routes.get("/groups/:id/stats", groupsController.getGroupStats);
+routes.post("/groups", groupsController.createGroup);
+routes.put("/groups/:id", groupsController.updateGroup);
+routes.delete("/groups/:id", groupsController.softDeleteGroup);
+routes.delete("/groups/:id/permanent", groupsController.hardDeleteGroup);
+
+// Students - CRUD
+routes.get("/students", studentsController.getAllStudents);
+routes.get("/students/deleted", studentsController.getDeletedStudents);
+routes.get("/students/search/barcode", studentsController.getStudentByBarcode);
+routes.get("/students/search/phone", studentsController.findStudentByPhone);
+routes.get(
+  "/students/search/parent-phone",
+  studentsController.findStudentByParentPhone,
+);
+routes.get("/students/grade/:gradeId", studentsController.getStudentsByGradeId);
+routes.get("/students/group/:groupId", studentsController.getStudentsByGroupId);
 routes.get(
   "/students/:studentId/profile",
   studentsController.getStudentProfile,
@@ -57,9 +242,88 @@ routes.get(
   "/students/:studentId/stats",
   studentsController.getStudentQuickStats,
 );
-
 routes.get(
-  "/attendance/overall",
+  "/students/:studentId/attendance",
+  studentsController.getAttendanceHistory,
+);
+routes.get(
+  "/students/:studentId/attendance/monthly",
+  studentsController.getMonthlyAttendanceStats,
+);
+routes.get(
+  "/students/:studentId/attendance/total",
+  studentsController.getStudentTotalAttendance,
+);
+routes.get(
+  "/students/:studentId/attendance/consecutive-absences",
+  studentsController.getConsecutiveAbsences,
+);
+routes.get(
+  "/students/:studentId/payments",
+  studentsController.getPaymentHistory,
+);
+routes.get(
+  "/students/:studentId/payments/balance",
+  studentsController.getRemainingBalance,
+);
+routes.get(
+  "/students/:studentId/payments/current-subscription",
+  studentsController.getCurrentSubscription,
+);
+routes.get(
+  "/students/:studentId/exams/paper",
+  studentsController.getStudentPaperExams,
+);
+routes.get(
+  "/students/:studentId/exams/paper/:examId",
+  studentsController.getStudentPaperExamById,
+);
+routes.get(
+  "/students/:studentId/exams/results",
+  studentsController.getStudentExamResults,
+);
+routes.get(
+  "/students/:studentId/exams/online/history",
+  studentsController.getStudentOnlineExams,
+);
+routes.get(
+  "/students/:studentId/exams/online/:attemptId",
+  studentsController.getStudentOnlineExamById,
+);
+routes.get(
+  "/students/:studentId/assignments",
+  studentsController.getStudentAssignments,
+);
+routes.get(
+  "/students/:studentId/assignments/:assignmentId",
+  studentsController.getStudentAssignmentById,
+);
+routes.get(
+  "/students/:studentId/submissions",
+  studentsController.getStudentSubmissions,
+);
+routes.get(
+  "/students/:studentId/submissions/:submissionId",
+  studentsController.getStudentSubmissionById,
+);
+routes.get(
+  "/students/:studentId/playlists",
+  studentsController.getStudentPlaylists,
+);
+routes.get("/students/:studentId", studentsController.getStudentById);
+routes.post("/students", studentsController.createStudent);
+routes.put("/students/:studentId", studentsController.updateStudent);
+routes.delete("/students/:studentId", studentsController.softDeleteStudent);
+routes.delete(
+  "/students/:studentId/permanent",
+  studentsController.hardDeleteStudent,
+);
+routes.post("/students/:studentId/restore", studentsController.restoreStudent);
+
+// Attendance
+routes.get("/attendance/dashboard", attendanceController.getDashboard);
+routes.get(
+  "/attendance/overall-stats",
   attendanceController.getOverallAttendanceStats,
 );
 routes.get(
@@ -78,13 +342,31 @@ routes.get(
   "/attendance/group/:groupId/month/:month",
   attendanceController.getAttendanceByGroupAndMonth,
 );
+routes.get(
+  "/attendance/summary/group/:groupId/date/:date",
+  attendanceController.getAttendanceSummary,
+);
+routes.get("/attendance/:id", attendanceController.getAttendanceById);
+routes.post("/attendance", attendanceController.createAttendance);
+routes.post(
+  "/attendance/mark-rest-absent",
+  attendanceController.markRestAbsent,
+);
+routes.put("/attendance/:id", attendanceController.updateAttendance);
+routes.delete("/attendance/:id", attendanceController.deleteAttendance);
 
+// Payments
+routes.get("/payments", paymentsController.getAllPayments);
 routes.get("/payments/collections", paymentsController.getMonthlyCollections);
 routes.get(
   "/payments/unpaid",
   paymentsController.getUnpaidStudentsCurrentMonth,
 );
 routes.get("/payments/overall", paymentsController.getOverallPaymentStats);
+routes.get(
+  "/payments/students-status",
+  paymentsController.getAllStudentsPaymentStatus,
+);
 routes.get(
   "/payments/grade/:gradeId/stats",
   paymentsController.getGradePaymentStats,
@@ -101,18 +383,19 @@ routes.get(
   "/payments/group/:groupId/month/:month",
   paymentsController.getPaymentsByGroupAndMonth,
 );
+routes.get("/payments/:id", paymentsController.getPaymentById);
+routes.post("/payments", paymentsController.createPayment);
+routes.put("/payments/:id", paymentsController.updatePayment);
+routes.delete("/payments/:id", paymentsController.deletePayment);
 
-routes.get(
-  "/subscriptions/without-current",
-  subscriptionsController.getStudentsWithoutSubscriptionCurrentMonth,
-);
+// Subscriptions
 routes.get(
   "/subscriptions/overall",
   subscriptionsController.getOverallSubscriptionStats,
 );
 routes.get(
-  "/subscriptions/student/:studentId",
-  subscriptionsController.getStudentSubscriptions,
+  "/subscriptions/without-current",
+  subscriptionsController.getStudentsWithoutSubscriptionCurrentMonth,
 );
 routes.get(
   "/subscriptions/month/:month",
@@ -126,14 +409,30 @@ routes.get(
   "/subscriptions/group/:groupId/stats",
   subscriptionsController.getGroupSubscriptionStats,
 );
+routes.get(
+  "/subscriptions/student/:studentId",
+  subscriptionsController.getStudentSubscriptions,
+);
+routes.post("/subscriptions", subscriptionsController.createSubscription);
+routes.put(
+  "/subscriptions/:id/status",
+  subscriptionsController.updateSubscriptionStatus,
+);
+routes.delete("/subscriptions/:id", subscriptionsController.deleteSubscription);
 
+// Exams (ورقية)
 routes.get("/exams", examsController.getAllExams);
+routes.get("/exams/grade/:gradeId/stats", examsController.getGradeExamStats);
 routes.get("/exams/grade/:gradeId", examsController.getExamsByGradeId);
 routes.get("/exams/group/:groupId", examsController.getExamsByGroupId);
-routes.get("/exams/grade/:gradeId/stats", examsController.getGradeExamStats);
-routes.get("/exams/:examId", examsController.getExamById);
-routes.get("/exams/:examId/stats", examsController.getExamStats);
+routes.get("/exams/:id", examsController.getExamById);
+routes.get("/exams/:id/stats", examsController.getExamStats);
+routes.post("/exams", examsController.createExam);
+routes.put("/exams/:id", examsController.updateExam);
+routes.delete("/exams/:id", examsController.softDeleteExam);
+routes.delete("/exams/:id/permanent", examsController.hardDeleteExam);
 
+// Exam Results
 routes.get(
   "/exam-results/grade/:gradeId/stats",
   examResultsController.getGradeExamResultsStats,
@@ -142,49 +441,29 @@ routes.get(
   "/exam-results/group/:groupId/stats",
   examResultsController.getGroupExamResultsStats,
 );
-routes.get("/exam-results/:examId", examResultsController.getExamResults);
+routes.get("/exam-results/exam/:examId", examResultsController.getExamResults);
 routes.get(
-  "/exam-results/:examId/stats",
+  "/exam-results/exam/:examId/stats",
   examResultsController.getExamResultStats,
 );
+routes.post("/exam-results", examResultsController.createExamResult);
+routes.post("/exam-results/upsert", examResultsController.upsertExamResult);
+routes.post(
+  "/exam-results/upsert-batch",
+  examResultsController.upsertBatchExamResults,
+);
+routes.put("/exam-results/:id", examResultsController.updateExamResult);
+routes.delete("/exam-results/:id", examResultsController.deleteExamResult);
 
-routes.get("/online-exams", onlineExamController.getAllOnlineExams);
+// Student Exams - قراءة
 routes.get(
-  "/online-exams/grade/:gradeId",
-  onlineExamController.getOnlineExamsByGradeId,
+  "/student-exams/exam/:examId",
+  studentExamController.getStudentExamsByExamId,
 );
 routes.get(
-  "/online-exams/group/:groupId",
-  onlineExamController.getOnlineExamsByGroupId,
+  "/student-exams/exam/:examId/stats",
+  studentExamController.getExamAttemptStats,
 );
-routes.get(
-  "/online-exams/stats/grade/:gradeId",
-  onlineExamController.getGradeOnlineExamStats,
-);
-routes.get("/online-exams/:examId", onlineExamController.getOnlineExamById);
-routes.get(
-  "/online-exams/stats/:examId",
-  onlineExamController.getOnlineExamStats,
-);
-routes.post("/online-exams", onlineExamController.createOnlineExam);
-routes.put("/online-exams/:examId", onlineExamController.updateOnlineExam);
-routes.delete("/online-exams/:examId", onlineExamController.deleteOnlineExam);
-
-routes.get("/questions/exam/:examId", questionController.getQuestionsByExamId);
-routes.get("/questions/:questionId", questionController.getQuestionById);
-routes.post("/questions", questionController.createQuestion);
-routes.put("/questions/:questionId", questionController.updateQuestion);
-routes.delete("/questions/:questionId", questionController.deleteQuestion);
-
-routes.get(
-  "/options/question/:questionId",
-  optionController.getOptionsByQuestionId,
-);
-routes.get("/options/:optionId", optionController.getOptionById);
-routes.post("/options", optionController.createOption);
-routes.put("/options/:optionId", optionController.updateOption);
-routes.delete("/options/:optionId", optionController.deleteOption);
-
 routes.get(
   "/student-exams/grade/:gradeId/stats",
   studentExamController.getGradeExamAttemptsStats,
@@ -193,15 +472,8 @@ routes.get(
   "/student-exams/group/:groupId/stats",
   studentExamController.getGroupExamAttemptsStats,
 );
-routes.get(
-  "/student-exams/:examId",
-  studentExamController.getStudentExamsByExamId,
-);
-routes.get(
-  "/student-exams/:examId/stats",
-  studentExamController.getExamAttemptStats,
-);
 
+// Student Answers - إحصائيات
 routes.get(
   "/student-answers/question/:questionId/stats",
   studentAnswerController.getQuestionAnswerStats,
@@ -211,87 +483,17 @@ routes.get(
   studentAnswerController.getMostSelectedOptions,
 );
 
-routes.get("/assignments", assignmentController.getAllAssignments);
+// WhatsApp Templates
+routes.get("/whatsapp-messages", whatsappController.getAllTemplates);
 routes.get(
-  "/assignments/grade/:gradeId",
-  assignmentController.getAssignmentsByGradeId,
+  "/whatsapp-messages/:templateId",
+  whatsappController.getTemplateById,
 );
-routes.get(
-  "/assignments/group/:groupId",
-  assignmentController.getAssignmentsByGroupId,
-);
-routes.get(
-  "/assignments/:assignmentId",
-  assignmentController.getAssignmentById,
-);
-routes.post("/assignments", assignmentController.createAssignment);
-routes.put("/assignments/:assignmentId", assignmentController.updateAssignment);
-routes.delete(
-  "/assignments/:assignmentId",
-  assignmentController.deleteAssignment,
-);
-
-routes.get(
-  "/assignment-submissions/stats/grade/:gradeId",
-  assignmentSubmissionController.getGradeAssignmentSubmissionStats,
-);
-routes.get(
-  "/assignment-submissions/stats/group/:groupId",
-  assignmentSubmissionController.getGroupAssignmentSubmissionStats,
-);
-routes.get(
-  "/assignment-submissions/assignment/:assignmentId",
-  assignmentSubmissionController.getSubmissionsByAssignmentId,
-);
-routes.get(
-  "/assignment-submissions/assignment/:assignmentId/student/:studentId",
-  assignmentSubmissionController.getStudentSubmission,
-);
-routes.get(
-  "/assignment-submissions/stats/assignment/:assignmentId",
-  assignmentSubmissionController.getAssignmentSubmissionStats,
-);
+routes.post("/whatsapp-messages", whatsappController.createTemplate);
+routes.put("/whatsapp-messages/:templateId", whatsappController.updateTemplate);
 routes.put(
-  "/assignment-submissions/:submissionId/grade",
-  assignmentSubmissionController.gradeSubmission,
+  "/whatsapp-messages/:templateId/toggle",
+  whatsappController.toggleTemplateActive,
 );
-
-routes.get("/videos", videoController.getAllVideos);
-routes.get("/videos/active", videoController.getActiveVideos);
-routes.get("/videos/inactive", videoController.getInactiveVideos);
-routes.get("/videos/grade/:gradeId", videoController.getVideosByGradeId);
-routes.get("/videos/:videoId", videoController.getVideoById);
-routes.post("/videos", videoController.createVideo);
-routes.put("/videos/:videoId", videoController.updateVideo);
-routes.delete("/videos/:videoId", videoController.deleteVideo);
-
-routes.get("/playlists", playlistController.getAllPlaylists);
-routes.get("/playlists/active", playlistController.getActivePlaylists);
-routes.get("/playlists/inactive", playlistController.getInactivePlaylists);
-routes.get(
-  "/playlists/grade/:gradeId",
-  playlistController.getPlaylistsByGradeId,
-);
-routes.get(
-  "/playlists/stats/grade/:gradeId",
-  playlistController.getGradePlaylistsStats,
-);
-routes.get("/playlists/:playlistId", playlistController.getPlaylistById);
-routes.get("/playlists/stats/:playlistId", playlistController.getPlaylistStats);
-routes.post("/playlists", playlistController.createPlaylist);
-routes.put("/playlists/:playlistId", playlistController.updatePlaylist);
-routes.delete("/playlists/:playlistId", playlistController.deletePlaylist);
-
-routes.get(
-  "/playlist-videos/playlist/:playlistId",
-  playlistVideoController.getPlaylistVideos,
-);
-routes.post("/playlist-videos", playlistVideoController.addVideoToPlaylist);
-routes.delete(
-  "/playlist-videos/:id",
-  playlistVideoController.removeVideoFromPlaylist,
-);
-
-routes.put("/settings/change-password", settingsController.changeUserPassword);
 
 module.exports = routes;

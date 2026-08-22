@@ -6,12 +6,17 @@ const {
   addVideoToPlaylistSchema,
 } = require("../../middlewares/validations/playlistVideo.validation");
 
+// Get playlist videos
 routes.get("/playlist/:playlistId", playlistVideoController.getPlaylistVideos);
+
+// Add video to playlist
 routes.post(
   "/",
   validate(addVideoToPlaylistSchema),
   playlistVideoController.addVideoToPlaylist,
 );
+
+// Remove video from playlist
 routes.delete("/:id", playlistVideoController.removeVideoFromPlaylist);
 
 module.exports = routes;

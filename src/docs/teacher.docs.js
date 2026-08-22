@@ -13,104 +13,98 @@
  *     tags: [Teacher]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     responses: { 200: { description: Grades list } }
- * 
+ *
+ * /api/teacher/groups:
+ *   get:
+ *     summary: Get all groups
+ *     tags: [Teacher]
+ *     security: [{ ApiAuth: [], ClientToken: [] }]
+ *     responses: { 200: { description: Groups list } }
+ *
  * /api/teacher/students:
  *   get:
  *     summary: Get all students
  *     tags: [Teacher]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     responses: { 200: { description: Students list } }
- * 
- * /api/teacher/students/search:
- *   get:
- *     summary: Search student by barcode
- *     tags: [Teacher]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: query
- *         name: barcode
- *         required: true
- *         schema: { type: string }
- *     responses: { 200: { description: Student data } }
- * 
- * /api/teacher/attendance/overall:
+ *
+ * /api/teacher/attendance/overall-stats:
  *   get:
  *     summary: Get overall attendance stats
  *     tags: [Teacher]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     responses: { 200: { description: Overall attendance stats } }
- * 
- * /api/teacher/payments/overall:
+ *
+ * /api/teacher/payments:
  *   get:
- *     summary: Get overall payment stats
+ *     summary: Get all payments
  *     tags: [Teacher]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Overall payment stats } }
- * 
- * /api/teacher/payments/collections:
+ *     responses: { 200: { description: Payments list } }
+ *
+ * /api/teacher/subscriptions/overall:
  *   get:
- *     summary: Get monthly collections
+ *     summary: Get overall subscription stats
  *     tags: [Teacher]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Monthly collections } }
- * 
- * /api/teacher/payments/unpaid:
- *   get:
- *     summary: Get unpaid students
- *     tags: [Teacher]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Unpaid students } }
- * 
+ *     responses: { 200: { description: Subscription stats } }
+ *
  * /api/teacher/exams:
  *   get:
  *     summary: Get all exams
  *     tags: [Teacher]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     responses: { 200: { description: Exams list } }
- * 
+ *
+ * /api/teacher/exam-results/exam/{examId}:
+ *   get:
+ *     summary: Get exam results
+ *     tags: [Teacher]
+ *     security: [{ ApiAuth: [], ClientToken: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: examId
+ *         required: true
+ *         schema: { type: integer }
+ *     responses: { 200: { description: Exam results } }
+ *
  * /api/teacher/online-exams:
  *   get:
  *     summary: Get all online exams
  *     tags: [Teacher]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     responses: { 200: { description: Online exams list } }
- * 
- * /api/teacher/videos:
+ *
+ * /api/teacher/student-exams/exam/{examId}/stats:
  *   get:
- *     summary: Get all videos
+ *     summary: Get exam attempt stats
  *     tags: [Teacher]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Videos list } }
- * 
- * /api/teacher/playlists:
- *   get:
- *     summary: Get all playlists
- *     tags: [Teacher]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Playlists list } }
- * 
+ *     parameters:
+ *       - in: path
+ *         name: examId
+ *         required: true
+ *         schema: { type: integer }
+ *     responses: { 200: { description: Exam attempt stats } }
+ *
  * /api/teacher/assignments:
  *   get:
  *     summary: Get all assignments
  *     tags: [Teacher]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     responses: { 200: { description: Assignments list } }
- * 
- * /api/teacher/settings/change-password:
- *   put:
- *     summary: Change password
+ *
+ * /api/teacher/videos:
+ *   get:
+ *     summary: Get all videos
  *     tags: [Teacher]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [oldPassword, newPassword, confirmPassword]
- *             properties:
- *               oldPassword: { type: string }
- *               newPassword: { type: string }
- *               confirmPassword: { type: string }
- *     responses: { 200: { description: Password changed } }
+ *     responses: { 200: { description: Videos list } }
+ *
+ * /api/teacher/playlists:
+ *   get:
+ *     summary: Get all playlists
+ *     tags: [Teacher]
+ *     security: [{ ApiAuth: [], ClientToken: [] }]
+ *     responses: { 200: { description: Playlists list } }
  */

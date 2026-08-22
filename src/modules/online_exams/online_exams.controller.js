@@ -1,11 +1,18 @@
 const onlineExamService = require("./online_exams.service");
 
+// Get all online exams
 const getAllOnlineExams = async (req, res, next) => {
   try {
-    const exams = await onlineExamService.getAllOnlineExams();
+    const page = parseInt(req.query.page) || 1;
+    const exams = await onlineExamService.getAllOnlineExams(page);
+
+    if (!exams) {
+      throw new Error("فشل تحميل الامتحانات حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الامتحانات بنجاح!",
       data: exams,
     });
   } catch (error) {
@@ -13,13 +20,19 @@ const getAllOnlineExams = async (req, res, next) => {
   }
 };
 
+// Get online exam by ID
 const getOnlineExamById = async (req, res, next) => {
   try {
-    const exam = await onlineExamService.getOnlineExamById(req.params.examId);
-    if (!exam) throw new Error("Exam Not Found!");
+    const { examId } = req.params;
+    const exam = await onlineExamService.getOnlineExamById(examId);
+
+    if (!exam) {
+      throw new Error("فشل تحميل الامتحان حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الامتحان بنجاح!",
       data: exam,
     });
   } catch (error) {
@@ -27,12 +40,19 @@ const getOnlineExamById = async (req, res, next) => {
   }
 };
 
+// Get online exams by grade
 const getOnlineExamsByGradeId = async (req, res, next) => {
   try {
-    const exams = await onlineExamService.getOnlineExamsByGradeId(req.params.gradeId);
+    const { gradeId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const exams = await onlineExamService.getOnlineExamsByGradeId(
+      gradeId,
+      page,
+    );
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الامتحانات بنجاح!",
       data: exams,
     });
   } catch (error) {
@@ -40,12 +60,19 @@ const getOnlineExamsByGradeId = async (req, res, next) => {
   }
 };
 
+// Get online exams by group
 const getOnlineExamsByGroupId = async (req, res, next) => {
   try {
-    const exams = await onlineExamService.getOnlineExamsByGroupId(req.params.groupId);
+    const { groupId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const exams = await onlineExamService.getOnlineExamsByGroupId(
+      groupId,
+      page,
+    );
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الامتحانات بنجاح!",
       data: exams,
     });
   } catch (error) {
@@ -53,13 +80,49 @@ const getOnlineExamsByGroupId = async (req, res, next) => {
   }
 };
 
+// Get available online exams
+const getAvailableOnlineExams = async (req, res, next) => {
+  try {
+    const exams = await onlineExamService.getAvailableOnlineExams();
+
+    return res.status(200).json({
+      success: true,
+      message: "تم تحميل الامتحانات المتاحة بنجاح!",
+      data: exams,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get expired online exams
+const getExpiredOnlineExams = async (req, res, next) => {
+  try {
+    const exams = await onlineExamService.getExpiredOnlineExams();
+
+    return res.status(200).json({
+      success: true,
+      message: "تم تحميل الامتحانات المنتهية بنجاح!",
+      data: exams,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get online exam stats
 const getOnlineExamStats = async (req, res, next) => {
   try {
-    const stats = await onlineExamService.getOnlineExamStats(req.params.examId);
-    if (!stats) throw new Error("Exam Not Found!");
+    const { examId } = req.params;
+    const stats = await onlineExamService.getOnlineExamStats(examId);
+
+    if (!stats) {
+      throw new Error("فشل تحميل الإحصائيات حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الإحصائيات بنجاح!",
       data: stats,
     });
   } catch (error) {
@@ -67,13 +130,19 @@ const getOnlineExamStats = async (req, res, next) => {
   }
 };
 
+// Get grade online exam stats
 const getGradeOnlineExamStats = async (req, res, next) => {
   try {
-    const stats = await onlineExamService.getGradeOnlineExamStats(req.params.gradeId);
-    if (!stats) throw new Error("Grade Not Found!");
+    const { gradeId } = req.params;
+    const stats = await onlineExamService.getGradeOnlineExamStats(gradeId);
+
+    if (!stats) {
+      throw new Error("فشل تحميل الإحصائيات حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الإحصائيات بنجاح!",
       data: stats,
     });
   } catch (error) {
@@ -81,15 +150,21 @@ const getGradeOnlineExamStats = async (req, res, next) => {
   }
 };
 
+// Create online exam
 const createOnlineExam = async (req, res, next) => {
   try {
-    const { title, description, grade_id, group_id, durationMinutes, startAt, endAt, fullMark, randomizeQuestions } = req.body;
-    const exam = await onlineExamService.createOnlineExam(
-      title, description, grade_id, group_id, durationMinutes, startAt, endAt, fullMark, randomizeQuestions, req.clientId
-    );
+    const exam = await onlineExamService.createOnlineExam({
+      ...req.body,
+      created_by: req.clientId,
+    });
+
+    if (!exam) {
+      throw new Error("فشل إنشاء الامتحان حاول مرة أخرى!");
+    }
+
     return res.status(201).json({
       success: true,
-      message: "Exam Created!",
+      message: "تم إنشاء الامتحان بنجاح!",
       data: exam,
     });
   } catch (error) {
@@ -97,16 +172,19 @@ const createOnlineExam = async (req, res, next) => {
   }
 };
 
+// Update online exam
 const updateOnlineExam = async (req, res, next) => {
   try {
-    const { title, description, grade_id, group_id, durationMinutes, startAt, endAt, fullMark, randomizeQuestions } = req.body;
-    const exam = await onlineExamService.updateOnlineExam(
-      req.params.examId, title, description, grade_id, group_id, durationMinutes, startAt, endAt, fullMark, randomizeQuestions
-    );
-    if (!exam) throw new Error("Exam Not Found!");
+    const { examId } = req.params;
+    const exam = await onlineExamService.updateOnlineExam(examId, req.body);
+
+    if (!exam) {
+      throw new Error("فشل تعديل الامتحان حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Exam Updated!",
+      message: "تم تعديل الامتحان بنجاح!",
       data: exam,
     });
   } catch (error) {
@@ -114,13 +192,39 @@ const updateOnlineExam = async (req, res, next) => {
   }
 };
 
-const deleteOnlineExam = async (req, res, next) => {
+// Soft delete online exam
+const softDeleteOnlineExam = async (req, res, next) => {
   try {
-    const exam = await onlineExamService.deleteOnlineExam(req.params.examId);
-    if (!exam) throw new Error("Exam Not Found!");
+    const { examId } = req.params;
+    const exam = await onlineExamService.softDeleteOnlineExam(examId);
+
+    if (!exam) {
+      throw new Error("فشل حذف الامتحان حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Exam Deleted!",
+      message: "تم حذف الامتحان بنجاح!",
+      data: exam,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Hard delete online exam
+const hardDeleteOnlineExam = async (req, res, next) => {
+  try {
+    const { examId } = req.params;
+    const exam = await onlineExamService.hardDeleteOnlineExam(examId);
+
+    if (!exam) {
+      throw new Error("فشل حذف الامتحان نهائيًا حاول مرة أخرى!");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم حذف الامتحان نهائيًا بنجاح!",
       data: exam,
     });
   } catch (error) {
@@ -133,9 +237,12 @@ module.exports = {
   getOnlineExamById,
   getOnlineExamsByGradeId,
   getOnlineExamsByGroupId,
+  getAvailableOnlineExams,
+  getExpiredOnlineExams,
   getOnlineExamStats,
   getGradeOnlineExamStats,
   createOnlineExam,
   updateOnlineExam,
-  deleteOnlineExam
+  softDeleteOnlineExam,
+  hardDeleteOnlineExam,
 };

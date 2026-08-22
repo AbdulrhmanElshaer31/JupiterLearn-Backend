@@ -1,35 +1,82 @@
 const { query } = require("../../config/database");
 const assignmentQueries = require("./assignments.queries");
 
-const getAllAssignments = async () => {
-  const result = await query(assignmentQueries.getAllAssignments);
+// Get all assignments
+const getAllAssignments = async (page = 1) => {
+  const result = await query(assignmentQueries.getAllAssignments, [page]);
   return result.rows;
 };
 
+// Get assignment by ID
 const getAssignmentById = async (assignmentId) => {
-  const result = await query(assignmentQueries.getAssignmentById, [assignmentId]);
+  const result = await query(assignmentQueries.getAssignmentById, [
+    assignmentId,
+  ]);
   return result.rows[0];
 };
 
-const getAssignmentsByGradeId = async (gradeId) => {
-  const result = await query(assignmentQueries.getAssignmentsByGradeId, [gradeId]);
+// Get assignments by grade
+const getAssignmentsByGradeId = async (gradeId, page = 1) => {
+  const result = await query(assignmentQueries.getAssignmentsByGradeId, [
+    gradeId,
+    page,
+  ]);
   return result.rows;
 };
 
-const getAssignmentsByGroupId = async (groupId) => {
-  const result = await query(assignmentQueries.getAssignmentsByGroupId, [groupId]);
+// Get assignments by group
+const getAssignmentsByGroupId = async (groupId, page = 1) => {
+  const result = await query(assignmentQueries.getAssignmentsByGroupId, [
+    groupId,
+    page,
+  ]);
   return result.rows;
 };
 
-const createAssignment = async (title, description, grade_id, group_id, file_path, full_mark, deadline, createdBy) => {
-  const result = await query(assignmentQueries.createAssignment, [title, description, grade_id, group_id, file_path, full_mark, deadline, createdBy]);
+// Create assignment
+const createAssignment = async (assignmentData) => {
+  const {
+    title,
+    description,
+    grade_id,
+    group_id,
+    file_path,
+    full_mark,
+    deadline,
+    created_by,
+  } = assignmentData;
+  const result = await query(assignmentQueries.createAssignment, [
+    title,
+    description,
+    grade_id,
+    group_id,
+    file_path,
+    full_mark,
+    deadline,
+    created_by,
+  ]);
   return result.rows[0];
 };
 
-const updateAssignment = async (assignmentId, title, description, grade_id, group_id, file_path, full_mark, deadline, is_closed) => {
-  const existing = await query("SELECT * FROM assignments WHERE id = $1 AND deleted = 0", [assignmentId]);
+// Update assignment
+const updateAssignment = async (assignmentId, assignmentData) => {
+  const {
+    title,
+    description,
+    grade_id,
+    group_id,
+    file_path,
+    full_mark,
+    deadline,
+    is_closed,
+  } = assignmentData;
+
+  const existing = await query(
+    "SELECT * FROM assignments WHERE id = $1 AND deleted = 0",
+    [assignmentId],
+  );
   if (!existing.rows[0]) return null;
-  
+
   const updated = {
     title: title ?? existing.rows[0].title,
     description: description ?? existing.rows[0].description,
@@ -38,18 +85,36 @@ const updateAssignment = async (assignmentId, title, description, grade_id, grou
     file_path: file_path ?? existing.rows[0].file_path,
     full_mark: full_mark ?? existing.rows[0].full_mark,
     deadline: deadline ?? existing.rows[0].deadline,
-    is_closed: is_closed ?? existing.rows[0].is_closed
+    is_closed: is_closed ?? existing.rows[0].is_closed,
   };
-  
+
   const result = await query(assignmentQueries.updateAssignment, [
-    assignmentId, updated.title, updated.description, updated.grade_id, updated.group_id,
-    updated.file_path, updated.full_mark, updated.deadline, updated.is_closed
+    assignmentId,
+    updated.title,
+    updated.description,
+    updated.grade_id,
+    updated.group_id,
+    updated.file_path,
+    updated.full_mark,
+    updated.deadline,
+    updated.is_closed,
   ]);
   return result.rows[0];
 };
 
-const deleteAssignment = async (assignmentId) => {
-  const result = await query(assignmentQueries.deleteAssignment, [assignmentId]);
+// Soft delete assignment
+const softDeleteAssignment = async (assignmentId) => {
+  const result = await query(assignmentQueries.softDeleteAssignment, [
+    assignmentId,
+  ]);
+  return result.rows[0];
+};
+
+// Hard delete assignment
+const hardDeleteAssignment = async (assignmentId) => {
+  const result = await query(assignmentQueries.hardDeleteAssignment, [
+    assignmentId,
+  ]);
   return result.rows[0];
 };
 
@@ -60,5 +125,6 @@ module.exports = {
   getAssignmentsByGroupId,
   createAssignment,
   updateAssignment,
-  deleteAssignment
+  softDeleteAssignment,
+  hardDeleteAssignment,
 };

@@ -1,3 +1,15 @@
+/* ============================================
+   OPTIONS QUERIES
+   ============================================ */
+
+// Create option
+const createOption = `
+INSERT INTO options (question_id, option_text, is_correct, "order")
+VALUES ($1, $2, $3, $4)
+RETURNING *
+`;
+
+// Get options by question ID
 const getOptionsByQuestionId = `
 SELECT 
   id,
@@ -11,6 +23,7 @@ WHERE question_id = $1
 ORDER BY "order" ASC
 `;
 
+// Get option by ID
 const getOptionById = `
 SELECT 
   id,
@@ -23,12 +36,7 @@ FROM options
 WHERE id = $1
 `;
 
-const createOption = `
-INSERT INTO options (question_id, option_text, is_correct, "order")
-VALUES ($1, $2, $3, $4)
-RETURNING *
-`;
-
+// Update option
 const updateOption = `
 UPDATE options
 SET 
@@ -39,16 +47,25 @@ WHERE id = $1
 RETURNING *
 `;
 
+// Delete option
 const deleteOption = `
 DELETE FROM options
 WHERE id = $1
 RETURNING id
 `;
 
+// Delete all options for a question
+const deleteOptionsByQuestionId = `
+DELETE FROM options
+WHERE question_id = $1
+RETURNING id
+`;
+
 module.exports = {
+  createOption,
   getOptionsByQuestionId,
   getOptionById,
-  createOption,
   updateOption,
-  deleteOption
+  deleteOption,
+  deleteOptionsByQuestionId,
 };

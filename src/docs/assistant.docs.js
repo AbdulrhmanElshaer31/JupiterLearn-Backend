@@ -2,8 +2,12 @@
  * @swagger
  * tags:
  *   name: Assistant
- *   description: Assistant management endpoints (Read + Write)
+ *   description: Assistant management endpoints (Center + Online Management)
  */
+
+/* ============================================
+   GRADES
+   ============================================ */
 
 /**
  * @swagger
@@ -13,54 +17,93 @@
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     responses: { 200: { description: Grades list } }
- *
- * /api/assistant/grades/active:
- *   get:
- *     summary: Get active grades
+ *   post:
+ *     summary: Create grade
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Active grades list } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, monthlyPrice]
+ *             properties:
+ *               name: { type: string }
+ *               monthlyPrice: { type: number }
+ *     responses: { 201: { description: Grade created } }
  *
- * /api/assistant/grades/inactive:
- *   get:
- *     summary: Get inactive grades
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Inactive grades list } }
- *
- * /api/assistant/grades/stats/all:
- *   get:
- *     summary: Get all grades stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: All grades stats } }
- *
- * /api/assistant/grades/{gradeId}:
+ * /api/assistant/grades/{id}:
  *   get:
  *     summary: Get grade by ID
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     parameters:
  *       - in: path
- *         name: gradeId
+ *         name: id
  *         required: true
  *         schema: { type: integer }
  *     responses: { 200: { description: Grade data } }
+ *   put:
+ *     summary: Update grade
+ *     tags: [Assistant]
+ *     security: [{ ApiAuth: [], ClientToken: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, monthlyPrice]
+ *             properties:
+ *               name: { type: string }
+ *               monthlyPrice: { type: number }
+ *     responses: { 200: { description: Grade updated } }
+ *   delete:
+ *     summary: Soft delete grade
+ *     tags: [Assistant]
+ *     security: [{ ApiAuth: [], ClientToken: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses: { 200: { description: Grade deleted } }
  *
- * /api/assistant/grades/{gradeId}/stats:
+ * /api/assistant/grades/{id}/stats:
  *   get:
  *     summary: Get grade stats
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     parameters:
  *       - in: path
- *         name: gradeId
+ *         name: id
  *         required: true
  *         schema: { type: integer }
  *     responses: { 200: { description: Grade stats } }
+ *
+ * /api/assistant/grades/{id}/permanent:
+ *   delete:
+ *     summary: Hard delete grade
+ *     tags: [Assistant]
+ *     security: [{ ApiAuth: [], ClientToken: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses: { 200: { description: Grade permanently deleted } }
  */
 
-// Groups
+/* ============================================
+   GROUPS
+   ============================================ */
+
 /**
  * @swagger
  * /api/assistant/groups:
@@ -69,13 +112,70 @@
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     responses: { 200: { description: Groups list } }
- *
- * /api/assistant/groups/stats/all:
- *   get:
- *     summary: Get all groups stats
+ *   post:
+ *     summary: Create group
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: All groups stats } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, grade_id, days, start_time, end_time]
+ *             properties:
+ *               name: { type: string }
+ *               grade_id: { type: integer }
+ *               days: { type: string }
+ *               start_time: { type: string }
+ *               end_time: { type: string }
+ *               room: { type: string }
+ *     responses: { 201: { description: Group created } }
+ *
+ * /api/assistant/groups/{id}:
+ *   get:
+ *     summary: Get group by ID
+ *     tags: [Assistant]
+ *     security: [{ ApiAuth: [], ClientToken: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses: { 200: { description: Group data } }
+ *   put:
+ *     summary: Update group
+ *     tags: [Assistant]
+ *     security: [{ ApiAuth: [], ClientToken: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, days, start_time, end_time]
+ *             properties:
+ *               name: { type: string }
+ *               days: { type: string }
+ *               start_time: { type: string }
+ *               end_time: { type: string }
+ *               room: { type: string }
+ *     responses: { 200: { description: Group updated } }
+ *   delete:
+ *     summary: Soft delete group
+ *     tags: [Assistant]
+ *     security: [{ ApiAuth: [], ClientToken: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses: { 200: { description: Group deleted } }
  *
  * /api/assistant/groups/grade/{gradeId}:
  *   get:
@@ -88,33 +188,12 @@
  *         required: true
  *         schema: { type: integer }
  *     responses: { 200: { description: Groups list } }
- *
- * /api/assistant/groups/{groupId}:
- *   get:
- *     summary: Get group by ID
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Group data } }
- *
- * /api/assistant/groups/{groupId}/stats:
- *   get:
- *     summary: Get group stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Group stats } }
  */
 
-// Students
+/* ============================================
+   STUDENTS
+   ============================================ */
+
 /**
  * @swagger
  * /api/assistant/students:
@@ -122,19 +201,41 @@
  *     summary: Get all students
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Students list } }
- *
- * /api/assistant/students/search:
- *   get:
- *     summary: Search student by barcode
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     parameters:
  *       - in: query
- *         name: barcode
- *         required: true
+ *         name: search
  *         schema: { type: string }
- *     responses: { 200: { description: Student data } }
+ *       - in: query
+ *         name: grade_id
+ *         schema: { type: integer }
+ *       - in: query
+ *         name: group_id
+ *         schema: { type: integer }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *     responses: { 200: { description: Students list } }
+ *   post:
+ *     summary: Create student
+ *     tags: [Assistant]
+ *     security: [{ ApiAuth: [], ClientToken: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [barcode, full_name, parent_token, grade_id, group_id]
+ *             properties:
+ *               barcode: { type: string }
+ *               full_name: { type: string }
+ *               phone: { type: string }
+ *               parent_phone: { type: string }
+ *               parent_token: { type: string }
+ *               grade_id: { type: integer }
+ *               group_id: { type: integer }
+ *               notes: { type: string }
+ *     responses: { 201: { description: Student created } }
  *
  * /api/assistant/students/{studentId}:
  *   get:
@@ -147,10 +248,8 @@
  *         required: true
  *         schema: { type: integer }
  *     responses: { 200: { description: Student data } }
- *
- * /api/assistant/students/{studentId}/profile:
- *   get:
- *     summary: Get student profile
+ *   put:
+ *     summary: Update student
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     parameters:
@@ -158,11 +257,22 @@
  *         name: studentId
  *         required: true
  *         schema: { type: integer }
- *     responses: { 200: { description: Student profile } }
- *
- * /api/assistant/students/{studentId}/stats:
- *   get:
- *     summary: Get student stats
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               barcode: { type: string }
+ *               full_name: { type: string }
+ *               phone: { type: string }
+ *               parent_phone: { type: string }
+ *               grade_id: { type: integer }
+ *               group_id: { type: integer }
+ *               notes: { type: string }
+ *     responses: { 200: { description: Student updated } }
+ *   delete:
+ *     summary: Soft delete student
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     parameters:
@@ -170,219 +280,149 @@
  *         name: studentId
  *         required: true
  *         schema: { type: integer }
- *     responses: { 200: { description: Student stats } }
+ *     responses: { 200: { description: Student deleted } }
  */
 
-// Attendance
+/* ============================================
+   ATTENDANCE
+   ============================================ */
+
 /**
  * @swagger
- * /api/assistant/attendance/overall:
- *   get:
- *     summary: Get overall attendance stats
+ * /api/assistant/attendance:
+ *   post:
+ *     summary: Create attendance
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Overall attendance stats } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [student_id, group_id, grade_id, attendance_date, status]
+ *             properties:
+ *               student_id: { type: integer }
+ *               group_id: { type: integer }
+ *               grade_id: { type: integer }
+ *               attendance_date: { type: string, format: date }
+ *               status: { type: string, enum: [present, absent] }
+ *               attendance_time: { type: string }
+ *               method: { type: string, enum: [manual, barcode] }
+ *               is_makeup: { type: integer, enum: [0, 1] }
+ *               makeup_group_id: { type: integer }
+ *               notes: { type: string }
+ *     responses: { 201: { description: Attendance created } }
  *
- * /api/assistant/attendance/consecutive-absences:
- *   get:
- *     summary: Get students with 3 consecutive absences
+ * /api/assistant/attendance/mark-rest-absent:
+ *   post:
+ *     summary: Mark rest as absent
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Students list } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [groupId, date]
+ *             properties:
+ *               groupId: { type: integer }
+ *               date: { type: string, format: date }
+ *     responses: { 200: { description: Rest marked as absent } }
  *
- * /api/assistant/attendance/grade/{gradeId}/stats:
- *   get:
- *     summary: Get grade attendance stats
+ * /api/assistant/attendance/{id}:
+ *   put:
+ *     summary: Update attendance
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     parameters:
  *       - in: path
- *         name: gradeId
+ *         name: id
  *         required: true
  *         schema: { type: integer }
- *     responses: { 200: { description: Grade attendance stats } }
- *
- * /api/assistant/attendance/group/{groupId}/date/{date}:
- *   get:
- *     summary: Get group attendance by date
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status: { type: string, enum: [present, absent] }
+ *               notes: { type: string }
+ *     responses: { 200: { description: Attendance updated } }
+ *   delete:
+ *     summary: Delete attendance
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     parameters:
  *       - in: path
- *         name: groupId
+ *         name: id
  *         required: true
  *         schema: { type: integer }
- *       - in: path
- *         name: date
- *         required: true
- *         schema: { type: string }
- *     responses: { 200: { description: Attendance records } }
- *
- * /api/assistant/attendance/group/{groupId}/month/{month}:
- *   get:
- *     summary: Get group attendance by month
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *       - in: path
- *         name: month
- *         required: true
- *         schema: { type: string }
- *     responses: { 200: { description: Attendance records } }
+ *     responses: { 200: { description: Attendance deleted } }
  */
 
-// Payments
+/* ============================================
+   PAYMENTS
+   ============================================ */
+
 /**
  * @swagger
- * /api/assistant/payments/collections:
+ * /api/assistant/payments:
  *   get:
- *     summary: Get monthly collections
+ *     summary: Get all payments
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Monthly collections } }
- *
- * /api/assistant/payments/unpaid:
- *   get:
- *     summary: Get unpaid students current month
+ *     responses: { 200: { description: Payments list } }
+ *   post:
+ *     summary: Create payment
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Unpaid students } }
- *
- * /api/assistant/payments/overall:
- *   get:
- *     summary: Get overall payment stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Overall payment stats } }
- *
- * /api/assistant/payments/grade/{gradeId}/stats:
- *   get:
- *     summary: Get grade payment stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Grade payment stats } }
- *
- * /api/assistant/payments/group/{groupId}/stats:
- *   get:
- *     summary: Get group payment stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Group payment stats } }
- *
- * /api/assistant/payments/grade/{gradeId}/month/{month}:
- *   get:
- *     summary: Get grade payments by month
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *       - in: path
- *         name: month
- *         required: true
- *         schema: { type: string }
- *     responses: { 200: { description: Payment records } }
- *
- * /api/assistant/payments/group/{groupId}/month/{month}:
- *   get:
- *     summary: Get group payments by month
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *       - in: path
- *         name: month
- *         required: true
- *         schema: { type: string }
- *     responses: { 200: { description: Payment records } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [subscription_id, student_id, amount]
+ *             properties:
+ *               subscription_id: { type: integer }
+ *               student_id: { type: integer }
+ *               amount: { type: number }
+ *               payment_date: { type: string, format: date-time }
+ *               notes: { type: string }
+ *     responses: { 201: { description: Payment created } }
  */
 
-// Subscriptions
+/* ============================================
+   SUBSCRIPTIONS
+   ============================================ */
+
 /**
  * @swagger
- * /api/assistant/subscriptions/student/{studentId}:
- *   get:
- *     summary: Get student subscriptions
+ * /api/assistant/subscriptions:
+ *   post:
+ *     summary: Create subscription
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: studentId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Student subscriptions } }
- *
- * /api/assistant/subscriptions/month/{month}:
- *   get:
- *     summary: Get subscriptions by month
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: month
- *         required: true
- *         schema: { type: string }
- *     responses: { 200: { description: Month subscriptions } }
- *
- * /api/assistant/subscriptions/without-current:
- *   get:
- *     summary: Get students without current subscription
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Students list } }
- *
- * /api/assistant/subscriptions/grade/{gradeId}/stats:
- *   get:
- *     summary: Get grade subscription stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Grade subscription stats } }
- *
- * /api/assistant/subscriptions/group/{groupId}/stats:
- *   get:
- *     summary: Get group subscription stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Group subscription stats } }
- *
- * /api/assistant/subscriptions/overall:
- *   get:
- *     summary: Get overall subscription stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Overall subscription stats } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [student_id, month, required_amount]
+ *             properties:
+ *               student_id: { type: integer }
+ *               month: { type: string, example: "2026-08" }
+ *               required_amount: { type: number }
+ *     responses: { 201: { description: Subscription created } }
  */
 
-// Paper Exams
+/* ============================================
+   EXAMS
+   ============================================ */
+
 /**
  * @swagger
  * /api/assistant/exams:
@@ -391,121 +431,31 @@
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     responses: { 200: { description: Exams list } }
- *
- * /api/assistant/exams/{examId}:
- *   get:
- *     summary: Get exam by ID
+ *   post:
+ *     summary: Create paper exam
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Exam data } }
- *
- * /api/assistant/exams/grade/{gradeId}:
- *   get:
- *     summary: Get exams by grade
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Exams list } }
- *
- * /api/assistant/exams/group/{groupId}:
- *   get:
- *     summary: Get exams by group
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Exams list } }
- *
- * /api/assistant/exams/{examId}/stats:
- *   get:
- *     summary: Get exam stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Exam stats } }
- *
- * /api/assistant/exams/grade/{gradeId}/stats:
- *   get:
- *     summary: Get grade exam stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Grade exam stats } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [title, grade_id, total_degree, exam_date]
+ *             properties:
+ *               title: { type: string }
+ *               grade_id: { type: integer }
+ *               group_id: { type: integer }
+ *               total_degree: { type: number }
+ *               exam_date: { type: string, format: date }
+ *               notes: { type: string }
+ *     responses: { 201: { description: Exam created } }
  */
 
-// Exam Results
-/**
- * @swagger
- * /api/assistant/exam-results/{examId}:
- *   get:
- *     summary: Get exam results
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Exam results } }
- *
- * /api/assistant/exam-results/{examId}/stats:
- *   get:
- *     summary: Get exam result stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Exam result stats } }
- *
- * /api/assistant/exam-results/grade/{gradeId}/stats:
- *   get:
- *     summary: Get grade exam results stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Grade exam results } }
- *
- * /api/assistant/exam-results/group/{groupId}/stats:
- *   get:
- *     summary: Get group exam results stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Group exam results } }
- */
+/* ============================================
+   ONLINE EXAMS
+   ============================================ */
 
-// Online Exams
 /**
  * @swagger
  * /api/assistant/online-exams:
@@ -524,171 +474,26 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [title, gradeId, durationMinutes, startAt, endAt, fullMark]
+ *             required: [title, grade_id, duration_minutes, start_at, end_at, full_mark]
  *             properties:
  *               title: { type: string }
  *               description: { type: string }
- *               gradeId: { type: integer }
- *               groupId: { type: integer }
- *               durationMinutes: { type: integer }
- *               startAt: { type: string, format: date-time }
- *               endAt: { type: string, format: date-time }
- *               fullMark: { type: number }
- *               randomizeQuestions: { type: integer, enum: [0, 1] }
- *     responses: { 201: { description: Exam created } }
- *
- * /api/assistant/online-exams/{examId}:
- *   get:
- *     summary: Get online exam by ID
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Online exam data } }
- *   put:
- *     summary: Update online exam
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title: { type: string }
- *               description: { type: string }
- *               gradeId: { type: integer }
- *               groupId: { type: integer }
- *               durationMinutes: { type: integer }
- *               startAt: { type: string, format: date-time }
- *               endAt: { type: string, format: date-time }
- *               fullMark: { type: number }
- *               randomizeQuestions: { type: integer, enum: [0, 1] }
- *     responses: { 200: { description: Exam updated } }
- *   delete:
- *     summary: Delete online exam
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Exam deleted } }
- *
- * /api/assistant/online-exams/grade/{gradeId}:
- *   get:
- *     summary: Get online exams by grade
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Online exams list } }
- *
- * /api/assistant/online-exams/group/{groupId}:
- *   get:
- *     summary: Get online exams by group
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Online exams list } }
- *
- * /api/assistant/online-exams/stats/{examId}:
- *   get:
- *     summary: Get online exam stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Online exam stats } }
- *
- * /api/assistant/online-exams/stats/grade/{gradeId}:
- *   get:
- *     summary: Get grade online exam stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Grade online exam stats } }
+ *               grade_id: { type: integer }
+ *               group_id: { type: integer }
+ *               duration_minutes: { type: integer }
+ *               start_at: { type: string, format: date-time }
+ *               end_at: { type: string, format: date-time }
+ *               full_mark: { type: number }
+ *               randomize_questions: { type: integer, enum: [0, 1] }
+ *     responses: { 201: { description: Online exam created } }
  */
 
-// Questions
+/* ============================================
+   QUESTIONS
+   ============================================ */
+
 /**
  * @swagger
- * /api/assistant/questions/exam/{examId}:
- *   get:
- *     summary: Get questions by exam
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Questions list } }
- *
- * /api/assistant/questions/{questionId}:
- *   get:
- *     summary: Get question by ID
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: questionId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Question data } }
- *   put:
- *     summary: Update question
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: questionId
- *         required: true
- *         schema: { type: integer }
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               questionText: { type: string }
- *               type: { type: string, enum: [mcq, true_false, essay] }
- *               order: { type: integer }
- *     responses: { 200: { description: Question updated } }
- *   delete:
- *     summary: Delete question
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: questionId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Question deleted } }
- *
  * /api/assistant/questions:
  *   post:
  *     summary: Create question
@@ -700,71 +505,21 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [examId, questionText, type, order]
+ *             required: [exam_id, question_text, type, order]
  *             properties:
- *               examId: { type: integer }
- *               questionText: { type: string }
+ *               exam_id: { type: integer }
+ *               question_text: { type: string }
  *               type: { type: string, enum: [mcq, true_false, essay] }
  *               order: { type: integer }
  *     responses: { 201: { description: Question created } }
  */
 
-// Options
+/* ============================================
+   OPTIONS
+   ============================================ */
+
 /**
  * @swagger
- * /api/assistant/options/question/{questionId}:
- *   get:
- *     summary: Get options by question
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: questionId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Options list } }
- *
- * /api/assistant/options/{optionId}:
- *   get:
- *     summary: Get option by ID
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: optionId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Option data } }
- *   put:
- *     summary: Update option
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: optionId
- *         required: true
- *         schema: { type: integer }
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               optionText: { type: string }
- *               isCorrect: { type: integer, enum: [0, 1] }
- *               order: { type: integer }
- *     responses: { 200: { description: Option updated } }
- *   delete:
- *     summary: Delete option
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: optionId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Option deleted } }
- *
  * /api/assistant/options:
  *   post:
  *     summary: Create option
@@ -776,96 +531,19 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [questionId, optionText, isCorrect, order]
+ *             required: [question_id, option_text, is_correct, order]
  *             properties:
- *               questionId: { type: integer }
- *               optionText: { type: string }
- *               isCorrect: { type: integer, enum: [0, 1] }
+ *               question_id: { type: integer }
+ *               option_text: { type: string }
+ *               is_correct: { type: integer, enum: [0, 1] }
  *               order: { type: integer }
  *     responses: { 201: { description: Option created } }
  */
 
-// Student Exams
-/**
- * @swagger
- * /api/assistant/student-exams/{examId}:
- *   get:
- *     summary: Get student exams by exam
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Student exams list } }
- *
- * /api/assistant/student-exams/{examId}/stats:
- *   get:
- *     summary: Get exam attempt stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Exam attempt stats } }
- *
- * /api/assistant/student-exams/grade/{gradeId}/stats:
- *   get:
- *     summary: Get grade exam attempts stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Grade exam attempts stats } }
- *
- * /api/assistant/student-exams/group/{groupId}/stats:
- *   get:
- *     summary: Get group exam attempts stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Group exam attempts stats } }
- */
+/* ============================================
+   ASSIGNMENTS
+   ============================================ */
 
-// Student Answers
-/**
- * @swagger
- * /api/assistant/student-answers/question/{questionId}/stats:
- *   get:
- *     summary: Get question answer stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: questionId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Question stats } }
- *
- * /api/assistant/student-answers/question/{questionId}/options:
- *   get:
- *     summary: Get most selected options
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: questionId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Options list } }
- */
-
-// Assignments
 /**
  * @swagger
  * /api/assistant/assignments:
@@ -884,118 +562,15 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [title, gradeId, fullMark, deadline]
+ *             required: [title, grade_id, full_mark, deadline]
  *             properties:
  *               title: { type: string }
  *               description: { type: string }
- *               gradeId: { type: integer }
- *               groupId: { type: integer }
- *               filePath: { type: string }
- *               fullMark: { type: number }
+ *               grade_id: { type: integer }
+ *               group_id: { type: integer }
+ *               full_mark: { type: number }
  *               deadline: { type: string, format: date-time }
  *     responses: { 201: { description: Assignment created } }
- *
- * /api/assistant/assignments/{assignmentId}:
- *   get:
- *     summary: Get assignment by ID
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: assignmentId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Assignment data } }
- *   put:
- *     summary: Update assignment
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: assignmentId
- *         required: true
- *         schema: { type: integer }
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title: { type: string }
- *               description: { type: string }
- *               gradeId: { type: integer }
- *               groupId: { type: integer }
- *               filePath: { type: string }
- *               fullMark: { type: number }
- *               deadline: { type: string, format: date-time }
- *               isClosed: { type: integer, enum: [0, 1] }
- *     responses: { 200: { description: Assignment updated } }
- *   delete:
- *     summary: Delete assignment
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: assignmentId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Assignment deleted } }
- *
- * /api/assistant/assignments/grade/{gradeId}:
- *   get:
- *     summary: Get assignments by grade
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Assignments list } }
- *
- * /api/assistant/assignments/group/{groupId}:
- *   get:
- *     summary: Get assignments by group
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Assignments list } }
- */
-
-// Assignment Submissions
-/**
- * @swagger
- * /api/assistant/assignment-submissions/assignment/{assignmentId}:
- *   get:
- *     summary: Get submissions by assignment
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: assignmentId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Submissions list } }
- *
- * /api/assistant/assignment-submissions/assignment/{assignmentId}/student/{studentId}:
- *   get:
- *     summary: Get student submission
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: assignmentId
- *         required: true
- *         schema: { type: integer }
- *       - in: path
- *         name: studentId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Student submission } }
  *
  * /api/assistant/assignment-submissions/{submissionId}/grade:
  *   put:
@@ -1018,45 +593,12 @@
  *               score: { type: number }
  *               feedback: { type: string }
  *     responses: { 200: { description: Submission graded } }
- *
- * /api/assistant/assignment-submissions/stats/assignment/{assignmentId}:
- *   get:
- *     summary: Get assignment submission stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: assignmentId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Submission stats } }
- *
- * /api/assistant/assignment-submissions/stats/grade/{gradeId}:
- *   get:
- *     summary: Get grade submission stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Grade submission stats } }
- *
- * /api/assistant/assignment-submissions/stats/group/{groupId}:
- *   get:
- *     summary: Get group submission stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Group submission stats } }
  */
 
-// Videos
+/* ============================================
+   VIDEOS
+   ============================================ */
+
 /**
  * @swagger
  * /api/assistant/videos:
@@ -1075,85 +617,19 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [title, gradeId, youtubeUrl]
+ *             required: [title, grade_id, video_url]
  *             properties:
  *               title: { type: string }
  *               description: { type: string }
- *               gradeId: { type: integer }
- *               youtubeUrl: { type: string }
+ *               grade_id: { type: integer }
+ *               video_url: { type: string }
  *     responses: { 201: { description: Video created } }
- *
- * /api/assistant/videos/active:
- *   get:
- *     summary: Get active videos
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Active videos } }
- *
- * /api/assistant/videos/inactive:
- *   get:
- *     summary: Get inactive videos
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Inactive videos } }
- *
- * /api/assistant/videos/grade/{gradeId}:
- *   get:
- *     summary: Get videos by grade
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Videos list } }
- *
- * /api/assistant/videos/{videoId}:
- *   get:
- *     summary: Get video by ID
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: videoId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Video data } }
- *   put:
- *     summary: Update video
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: videoId
- *         required: true
- *         schema: { type: integer }
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title: { type: string }
- *               description: { type: string }
- *               gradeId: { type: integer }
- *               youtubeUrl: { type: string }
- *               isActive: { type: integer, enum: [0, 1] }
- *     responses: { 200: { description: Video updated } }
- *   delete:
- *     summary: Delete video
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: videoId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Video deleted } }
  */
 
-// Playlists
+/* ============================================
+   PLAYLISTS
+   ============================================ */
+
 /**
  * @swagger
  * /api/assistant/playlists:
@@ -1172,124 +648,28 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [title, gradeId]
+ *             required: [title, grade_id]
  *             properties:
  *               title: { type: string }
  *               description: { type: string }
- *               gradeId: { type: integer }
+ *               grade_id: { type: integer }
  *     responses: { 201: { description: Playlist created } }
- *
- * /api/assistant/playlists/active:
- *   get:
- *     summary: Get active playlists
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Active playlists } }
- *
- * /api/assistant/playlists/inactive:
- *   get:
- *     summary: Get inactive playlists
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     responses: { 200: { description: Inactive playlists } }
- *
- * /api/assistant/playlists/grade/{gradeId}:
- *   get:
- *     summary: Get playlists by grade
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Playlists list } }
- *
- * /api/assistant/playlists/{playlistId}:
- *   get:
- *     summary: Get playlist by ID
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: playlistId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Playlist data } }
- *   put:
- *     summary: Update playlist
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: playlistId
- *         required: true
- *         schema: { type: integer }
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title: { type: string }
- *               description: { type: string }
- *               gradeId: { type: integer }
- *               isActive: { type: integer, enum: [0, 1] }
- *     responses: { 200: { description: Playlist updated } }
- *   delete:
- *     summary: Delete playlist
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: playlistId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Playlist deleted } }
- *
- * /api/assistant/playlists/stats/{playlistId}:
- *   get:
- *     summary: Get playlist stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: playlistId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Playlist stats } }
- *
- * /api/assistant/playlists/stats/grade/{gradeId}:
- *   get:
- *     summary: Get grade playlists stats
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: gradeId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Grade playlists stats } }
  */
 
-// Playlist Videos
+/* ============================================
+   WHATSAPP TEMPLATES
+   ============================================ */
+
 /**
  * @swagger
- * /api/assistant/playlist-videos/playlist/{playlistId}:
+ * /api/assistant/whatsapp-messages:
  *   get:
- *     summary: Get playlist videos
+ *     summary: Get all whatsapp templates
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: playlistId
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Videos list } }
- *
- * /api/assistant/playlist-videos:
+ *     responses: { 200: { description: Templates list } }
  *   post:
- *     summary: Add video to playlist
+ *     summary: Create whatsapp template
  *     tags: [Assistant]
  *     security: [{ ApiAuth: [], ClientToken: [] }]
  *     requestBody:
@@ -1298,43 +678,10 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [playlistId, videoId]
+ *             required: [template, sent_to]
  *             properties:
- *               playlistId: { type: integer }
- *               videoId: { type: integer }
- *     responses: { 201: { description: Video added } }
- *
- * /api/assistant/playlist-videos/{id}:
- *   delete:
- *     summary: Remove video from playlist
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: integer }
- *     responses: { 200: { description: Video removed } }
- */
-
-// Settings
-/**
- * @swagger
- * /api/assistant/settings/change-password:
- *   put:
- *     summary: Change password
- *     tags: [Assistant]
- *     security: [{ ApiAuth: [], ClientToken: [] }]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [oldPassword, newPassword, confirmPassword]
- *             properties:
- *               oldPassword: { type: string }
- *               newPassword: { type: string }
- *               confirmPassword: { type: string }
- *     responses: { 200: { description: Password changed } }
+ *               template: { type: string }
+ *               sent_to: { type: string, enum: [students, parents, both] }
+ *               delay: { type: integer, default: 60 }
+ *     responses: { 201: { description: Template created } }
  */

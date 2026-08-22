@@ -1,45 +1,59 @@
 const questionService = require("./questions.service");
+const fs = require("fs");
+const path = require("path");
+
+// Get questions by exam
 const getQuestionsByExamId = async (req, res, next) => {
   try {
-    const questions = await questionService.getQuestionsByExamId(
-      req.params.examId,
-    );
+    const { examId } = req.params;
+    const questions = await questionService.getQuestionsByExamId(examId);
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الأسئلة بنجاح!",
       data: questions,
     });
   } catch (error) {
     next(error);
   }
 };
+
+// Get question by ID
 const getQuestionById = async (req, res, next) => {
   try {
-    const question = await questionService.getQuestionById(
-      req.params.questionId,
-    );
-    if (!question) throw new Error("Question Not Found!");
+    const { questionId } = req.params;
+    const question = await questionService.getQuestionById(questionId);
+
+    if (!question) {
+      throw new Error("فشل تحميل السؤال حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل السؤال بنجاح!",
       data: question,
     });
   } catch (error) {
     next(error);
   }
 };
+
+// Create question
 const createQuestion = async (req, res, next) => {
   try {
-    const { exam_id, question_text, type, order } = req.body;
-    const question = await questionService.createQuestion(
-      exam_id,
-      question_text,
-      type,
-      order,
-    );
+    const file_path = req.file ? req.file.path : null;
+    const question = await questionService.createQuestion({
+      ...req.body,
+      file_path,
+    });
+
+    if (!question) {
+      throw new Error("فشل إنشاء السؤال حاول مرة أخرى!");
+    }
+
     return res.status(201).json({
       success: true,
-      message: "Question Created!",
+      message: "تم إنشاء السؤال بنجاح!",
       data: question,
     });
   } catch (error) {
@@ -47,19 +61,23 @@ const createQuestion = async (req, res, next) => {
   }
 };
 
+// Update question
 const updateQuestion = async (req, res, next) => {
   try {
-    const { question_text, type, order } = req.body;
-    const question = await questionService.updateQuestion(
-      req.params.questionId,
-      question_text,
-      type,
-      order,
-    );
-    if (!question) throw new Error("Question Not Found!");
+    const { questionId } = req.params;
+    const file_path = req.file ? req.file.path : null;
+    const question = await questionService.updateQuestion(questionId, {
+      ...req.body,
+      file_path,
+    });
+
+    if (!question) {
+      throw new Error("فشل تعديل السؤال حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Question Updated!",
+      message: "تم تعديل السؤال بنجاح!",
       data: question,
     });
   } catch (error) {
@@ -67,17 +85,38 @@ const updateQuestion = async (req, res, next) => {
   }
 };
 
+// Delete question
 const deleteQuestion = async (req, res, next) => {
   try {
-    const question = await questionService.deleteQuestion(
-      req.params.questionId,
-    );
-    if (!question) throw new Error("Question Not Found!");
+    const { questionId } = req.params;
+    const question = await questionService.deleteQuestion(questionId);
+
+    if (!question) {
+      throw new Error("فشل حذف السؤال حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Question Deleted!",
+      message: "تم حذف السؤال بنجاح!",
       data: question,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Download question file
+const downloadQuestionFile = async (req, res, next) => {
+  try {
+    const { questionId } = req.params;
+    const question = await questionService.getQuestionById(questionId);
+
+    if (!question || !question.file_path) {
+      throw new Error("الملف غير موجود");
+    }
+
+    const filePath = path.join(__dirname, "../../../", question.file_path);
+    return res.download(filePath);
   } catch (error) {
     next(error);
   }
@@ -89,4 +128,5 @@ module.exports = {
   createQuestion,
   updateQuestion,
   deleteQuestion,
+  downloadQuestionFile,
 };

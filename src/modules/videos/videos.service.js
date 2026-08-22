@@ -1,66 +1,60 @@
 const { query } = require("../../config/database");
 const videoQueries = require("./videos.queries");
 
-const getAllVideos = async () => {
-  const result = await query(videoQueries.getAllVideos);
+// Create video
+const createVideo = async (videoData) => {
+  const {
+    title,
+    description,
+    grade_id,
+    video_url,
+    file_url = null,
+    thumbnail_url = null,
+    created_by,
+  } = videoData;
+
+  const result = await query(videoQueries.createVideo, [
+    title,
+    description,
+    grade_id,
+    video_url,
+    file_url,
+    thumbnail_url,
+    created_by,
+  ]);
+  return result.rows[0];
+};
+
+// Get all videos
+const getAllVideos = async (page = 1) => {
+  const result = await query(videoQueries.getAllVideos, [page]);
   return result.rows;
 };
 
+// Get video by ID
 const getVideoById = async (videoId) => {
   const result = await query(videoQueries.getVideoById, [videoId]);
   return result.rows[0];
 };
 
-const getVideosByGradeId = async (gradeId) => {
-  const result = await query(videoQueries.getVideosByGradeId, [gradeId]);
+// Get videos by grade
+const getVideosByGradeId = async (gradeId, page = 1) => {
+  const result = await query(videoQueries.getVideosByGradeId, [gradeId, page]);
   return result.rows;
 };
 
-const getActiveVideos = async () => {
-  const result = await query(videoQueries.getActiveVideos);
-  return result.rows;
-};
-
-const getInactiveVideos = async () => {
-  const result = await query(videoQueries.getInactiveVideos);
-  return result.rows;
-};
-
-const createVideo = async (
-  title,
-  description,
-  grade_id,
-  youtube_url,
-  createdBy,
-) => {
-  const result = await query(videoQueries.createVideo, [
-    title,
-    description,
-    grade_id,
-    youtube_url,
-    createdBy,
-  ]);
-  return result.rows[0];
-};
-
-
-const updateVideo = async (
-  videoId,
-  title,
-  description,
-  grade_id,
-  youtube_url,
-  isActive,
-) => {
+// Update video
+const updateVideo = async (videoId, videoData) => {
   const existing = await query("SELECT * FROM videos WHERE id = $1", [videoId]);
   if (!existing.rows[0]) return null;
 
   const updated = {
-    title: title ?? existing.rows[0].title,
-    description: description ?? existing.rows[0].description,
-    grade_id: grade_id ?? existing.rows[0].grade_id,
-    youtube_url: youtube_url ?? existing.rows[0].youtube_url,
-    is_active: isActive ?? existing.rows[0].is_active,
+    title: videoData.title ?? existing.rows[0].title,
+    description: videoData.description ?? existing.rows[0].description,
+    grade_id: videoData.grade_id ?? existing.rows[0].grade_id,
+    video_url: videoData.video_url ?? existing.rows[0].video_url,
+    file_url: videoData.file_url ?? existing.rows[0].file_url,
+    thumbnail_url: videoData.thumbnail_url ?? existing.rows[0].thumbnail_url,
   };
 
   const result = await query(videoQueries.updateVideo, [
@@ -68,24 +62,24 @@ const updateVideo = async (
     updated.title,
     updated.description,
     updated.grade_id,
-    updated.youtube_url,
-    updated.is_active,
+    updated.video_url,
+    updated.file_url,
+    updated.thumbnail_url,
   ]);
   return result.rows[0];
 };
 
-const deleteVideo = async (videoId) => {
-  const result = await query(videoQueries.deleteVideo, [videoId]);
+// Hard delete video
+const hardDeleteVideo = async (videoId) => {
+  const result = await query(videoQueries.hardDeleteVideo, [videoId]);
   return result.rows[0];
 };
 
 module.exports = {
+  createVideo,
   getAllVideos,
   getVideoById,
   getVideosByGradeId,
-  getActiveVideos,
-  getInactiveVideos,
-  createVideo,
   updateVideo,
-  deleteVideo,
+  hardDeleteVideo,
 };

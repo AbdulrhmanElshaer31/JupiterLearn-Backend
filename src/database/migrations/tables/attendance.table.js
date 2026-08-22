@@ -14,7 +14,8 @@ async function createAttendanceTable() {
       is_makeup INTEGER DEFAULT 0,
       makeup_group_id INTEGER REFERENCES groups(id) ON DELETE SET NULL,
       notes TEXT,
-      created_at TIMESTAMP DEFAULT NOW()
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(student_id, attendance_date)
     )
   `);
 

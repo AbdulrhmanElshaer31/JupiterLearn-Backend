@@ -1,3 +1,57 @@
+/* ============================================
+   STUDENT ANSWERS QUERIES
+   ============================================ */
+
+// Insert MCQ/True-False answer
+const insertAnswer = `
+INSERT INTO student_answers (exam_id, student_id, question_id, selected_option_id, is_correct)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING *
+`;
+
+// Insert essay answer with file
+const insertEssayAnswer = `
+INSERT INTO student_answers (exam_id, student_id, question_id, file_path, is_correct)
+VALUES ($1, $2, $3, $4, NULL)
+RETURNING *
+`;
+
+// Update answer
+const updateAnswer = `
+UPDATE student_answers
+SET 
+  selected_option_id = $2,
+  is_correct = $3,
+  submitted_at = NOW()
+WHERE id = $1
+RETURNING *
+`;
+
+// Update essay answer file
+const updateEssayAnswer = `
+UPDATE student_answers
+SET 
+  file_path = $2,
+  submitted_at = NOW()
+WHERE id = $1
+RETURNING *
+`;
+
+// Delete answer
+const deleteAnswer = `
+DELETE FROM student_answers
+WHERE id = $1
+RETURNING id
+`;
+
+// Check if answer exists
+const checkExistingAnswer = `
+SELECT id
+FROM student_answers
+WHERE exam_id = $1 AND student_id = $2 AND question_id = $3
+`;
+
+// Get question answer stats
 const getQuestionAnswerStats = `
 SELECT 
   q.id AS question_id,
@@ -16,6 +70,7 @@ WHERE q.id = $1
 GROUP BY q.id, q.question_text, q.type
 `;
 
+// Get most selected options
 const getMostSelectedOptions = `
 SELECT 
   o.id AS option_id,
@@ -29,7 +84,33 @@ GROUP BY o.id, o.option_text, o.is_correct, o."order"
 ORDER BY o."order" ASC
 `;
 
+// Get student answers for an exam
+const getStudentAnswersByExam = `
+SELECT 
+  sa.id,
+  sa.question_id,
+  q.question_text,
+  q.type AS question_type,
+  sa.selected_option_id,
+  o.option_text AS selected_option,
+  sa.file_path,
+  sa.is_correct,
+  sa.submitted_at
+FROM student_answers sa
+JOIN questions q ON sa.question_id = q.id
+LEFT JOIN options o ON sa.selected_option_id = o.id
+WHERE sa.exam_id = $1 AND sa.student_id = $2
+ORDER BY q."order" ASC
+`;
+
 module.exports = {
+  insertAnswer,
+  insertEssayAnswer,
+  updateAnswer,
+  updateEssayAnswer,
+  deleteAnswer,
+  checkExistingAnswer,
   getQuestionAnswerStats,
   getMostSelectedOptions,
+  getStudentAnswersByExam,
 };

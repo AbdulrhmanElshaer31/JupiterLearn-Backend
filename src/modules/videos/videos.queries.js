@@ -1,3 +1,15 @@
+/* ============================================
+   VIDEOS QUERIES
+   ============================================ */
+
+// Create video
+const createVideo = `
+INSERT INTO videos (title, description, grade_id, video_url, file_url, thumbnail_url, created_by)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING *
+`;
+
+// Get all videos - 20 per page
 const getAllVideos = `
 SELECT 
   v.id,
@@ -5,15 +17,19 @@ SELECT
   v.description,
   v.grade_id,
   g.name AS grade_name,
-  v.youtube_url,
-  v.is_active,
+  v.video_url,
+  v.file_url,
+  v.thumbnail_url,
   v.created_by,
   v.created_at,
+  v.updated_at
 FROM videos v
 LEFT JOIN grades g ON v.grade_id = g.id AND g.deleted = 0
 ORDER BY v.created_at DESC
+LIMIT 20 OFFSET (($1::int - 1) * 20)
 `;
 
+// Get video by ID
 const getVideoById = `
 SELECT 
   v.id,
@@ -21,15 +37,18 @@ SELECT
   v.description,
   v.grade_id,
   g.name AS grade_name,
-  v.youtube_url,
-  v.is_active,
+  v.video_url,
+  v.file_url,
+  v.thumbnail_url,
   v.created_by,
   v.created_at,
+  v.updated_at
 FROM videos v
 LEFT JOIN grades g ON v.grade_id = g.id AND g.deleted = 0
 WHERE v.id = $1
 `;
 
+// Get videos by grade - 20 per page
 const getVideosByGradeId = `
 SELECT 
   v.id,
@@ -37,79 +56,45 @@ SELECT
   v.description,
   v.grade_id,
   g.name AS grade_name,
-  v.youtube_url,
-  v.is_active,
-  v.created_by,
+  v.video_url,
+  v.file_url,
+  v.thumbnail_url,
   v.created_at,
+  v.updated_at
 FROM videos v
 LEFT JOIN grades g ON v.grade_id = g.id AND g.deleted = 0
 WHERE v.grade_id = $1
 ORDER BY v.created_at DESC
+LIMIT 20 OFFSET (($2::int - 1) * 20)
 `;
 
-const getActiveVideos = `
-SELECT 
-  v.id,
-  v.title,
-  v.description,
-  v.grade_id,
-  g.name AS grade_name,
-  v.youtube_url,
-  v.is_active,
-  v.created_by,
-  v.created_at,
-FROM videos v
-LEFT JOIN grades g ON v.grade_id = g.id AND g.deleted = 0
-WHERE v.is_active = 1
-ORDER BY v.created_at DESC
-`;
-
-const getInactiveVideos = `
-SELECT 
-  v.id,
-  v.title,
-  v.description,
-  v.grade_id,
-  g.name AS grade_name,
-  v.youtube_url,
-  v.is_active,
-  v.created_by,
-  v.created_at,
-FROM videos v
-LEFT JOIN grades g ON v.grade_id = g.id AND g.deleted = 0
-WHERE v.is_active = 0
-ORDER BY v.created_at DESC
-`;
-
-const createVideo = `
-INSERT INTO videos (title, description, grade_id, youtube_url, created_by)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING *
-`;
-
+// Update video
 const updateVideo = `
 UPDATE videos
 SET 
   title = $2,
   description = $3,
   grade_id = $4,
-  youtube_url = $5,
-  is_active = $6,
-  WHERE id = $1
+  video_url = $5,
+  file_url = $6,
+  thumbnail_url = $7,
+  updated_at = NOW()
+WHERE id = $1
 RETURNING *
 `;
 
-const deleteVideo = `
-UPDATE videos SET deleted = 1 WHERE id = $1 RETURNING id
+// Hard delete video
+const hardDeleteVideo = `
+DELETE FROM videos
+WHERE id = $1
+RETURNING id
 `;
 
 module.exports = {
+  createVideo,
   getAllVideos,
   getVideoById,
   getVideosByGradeId,
-  getActiveVideos,
-  getInactiveVideos,
-  createVideo,
   updateVideo,
-  deleteVideo
+  hardDeleteVideo,
 };

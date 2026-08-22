@@ -1,3 +1,15 @@
+/* ============================================
+   SUBSCRIPTIONS QUERIES
+   ============================================ */
+
+// Create subscription
+const createSubscription = `
+INSERT INTO subscriptions (student_id, month, required_amount)
+VALUES ($1, $2, $3)
+RETURNING *
+`;
+
+// Get student subscriptions
 const getStudentSubscriptions = `
 SELECT 
   sub.id,
@@ -5,15 +17,18 @@ SELECT
   sub.required_amount,
   sub.status,
   sub.created_at,
-  COALESCE(SUM(p.amount), 0) AS paid_amount,
-  sub.required_amount - COALESCE(SUM(p.amount), 0) AS remaining_amount
+  COALESCE(
+    (SELECT SUM(p.amount) FROM payments p WHERE p.subscription_id = sub.id), 0
+  ) AS paid_amount,
+  sub.required_amount - COALESCE(
+    (SELECT SUM(p.amount) FROM payments p WHERE p.subscription_id = sub.id), 0
+  ) AS remaining_amount
 FROM subscriptions sub
-LEFT JOIN payments p ON sub.id = p.subscription_id AND p.deleted = 0
 WHERE sub.student_id = $1 AND sub.deleted = 0
-GROUP BY sub.id, sub.month, sub.required_amount, sub.status, sub.created_at
 ORDER BY sub.month DESC
 `;
 
+// Get subscriptions by month
 const getSubscriptionsByMonth = `
 SELECT 
   sub.id,
@@ -24,18 +39,21 @@ SELECT
   gr.name AS group_name,
   sub.required_amount,
   sub.status,
-  COALESCE(SUM(p.amount), 0) AS paid_amount,
-  sub.required_amount - COALESCE(SUM(p.amount), 0) AS remaining_amount
+  COALESCE(
+    (SELECT SUM(p.amount) FROM payments p WHERE p.subscription_id = sub.id), 0
+  ) AS paid_amount,
+  sub.required_amount - COALESCE(
+    (SELECT SUM(p.amount) FROM payments p WHERE p.subscription_id = sub.id), 0
+  ) AS remaining_amount
 FROM subscriptions sub
 JOIN students s ON sub.student_id = s.id AND s.deleted = 0
 LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON s.group_id = gr.id
-LEFT JOIN payments p ON sub.id = p.subscription_id AND p.deleted = 0
-WHERE TO_CHAR(sub.month, 'YYYY-MM') = $1 AND sub.deleted = 0
-GROUP BY sub.id, sub.student_id, s.full_name, s.barcode, g.name, gr.name, sub.required_amount, sub.status
+LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
+WHERE sub.month = $1 AND sub.deleted = 0
 ORDER BY s.full_name ASC
 `;
 
+// Get students without subscription current month
 const getStudentsWithoutSubscriptionCurrentMonth = `
 SELECT 
   s.id,
@@ -46,19 +64,18 @@ SELECT
   gr.name AS group_name
 FROM students s
 LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON s.group_id = gr.id
-WHERE s.deleted = 0 
-  AND s.active = 1
+LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
+WHERE s.deleted = 0
   AND s.id NOT IN (
     SELECT sub.student_id
     FROM subscriptions sub
-    WHERE EXTRACT(MONTH FROM sub.month) = EXTRACT(MONTH FROM CURRENT_DATE)
-      AND EXTRACT(YEAR FROM sub.month) = EXTRACT(YEAR FROM CURRENT_DATE)
+    WHERE sub.month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
       AND sub.deleted = 0
   )
 ORDER BY s.full_name ASC
 `;
 
+// Get grade subscription stats
 const getGradeSubscriptionStats = `
 SELECT 
   g.id,
@@ -66,19 +83,23 @@ SELECT
   COUNT(DISTINCT s.id) AS total_students,
   COUNT(DISTINCT sub.id) AS total_subscriptions,
   COALESCE(SUM(sub.required_amount), 0) AS total_required,
-  COALESCE(SUM(p.amount), 0) AS total_paid,
-  COALESCE(SUM(sub.required_amount), 0) - COALESCE(SUM(p.amount), 0) AS total_remaining
+  COALESCE(
+    (SELECT SUM(p.amount) FROM payments p 
+     JOIN subscriptions sub2 ON p.subscription_id = sub2.id
+     WHERE sub2.month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+       AND sub2.student_id IN (SELECT id FROM students WHERE grade_id = g.id AND deleted = 0)
+    ), 0
+  ) AS total_paid
 FROM grades g
-JOIN students s ON g.id = s.grade_id AND s.deleted = 0 AND s.active = 1
+JOIN students s ON g.id = s.grade_id AND s.deleted = 0
 LEFT JOIN subscriptions sub ON s.id = sub.student_id 
-  AND EXTRACT(MONTH FROM sub.month) = EXTRACT(MONTH FROM CURRENT_DATE)
-  AND EXTRACT(YEAR FROM sub.month) = EXTRACT(YEAR FROM CURRENT_DATE)
+  AND sub.month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
   AND sub.deleted = 0
-LEFT JOIN payments p ON sub.id = p.subscription_id AND p.deleted = 0
 WHERE g.id = $1 AND g.deleted = 0
 GROUP BY g.id, g.name
 `;
 
+// Get group subscription stats
 const getGroupSubscriptionStats = `
 SELECT 
   gr.id,
@@ -87,41 +108,65 @@ SELECT
   COUNT(DISTINCT s.id) AS total_students,
   COUNT(DISTINCT sub.id) AS total_subscriptions,
   COALESCE(SUM(sub.required_amount), 0) AS total_required,
-  COALESCE(SUM(p.amount), 0) AS total_paid,
-  COALESCE(SUM(sub.required_amount), 0) - COALESCE(SUM(p.amount), 0) AS total_remaining
+  COALESCE(
+    (SELECT SUM(p.amount) FROM payments p 
+     JOIN subscriptions sub2 ON p.subscription_id = sub2.id
+     WHERE sub2.month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+       AND sub2.student_id IN (SELECT id FROM students WHERE group_id = gr.id AND deleted = 0)
+    ), 0
+  ) AS total_paid
 FROM groups gr
 JOIN grades g ON gr.grade_id = g.id AND g.deleted = 0
-JOIN students s ON gr.id = s.group_id AND s.deleted = 0 AND s.active = 1
+JOIN students s ON gr.id = s.group_id AND s.deleted = 0
 LEFT JOIN subscriptions sub ON s.id = sub.student_id 
-  AND EXTRACT(MONTH FROM sub.month) = EXTRACT(MONTH FROM CURRENT_DATE)
-  AND EXTRACT(YEAR FROM sub.month) = EXTRACT(YEAR FROM CURRENT_DATE)
+  AND sub.month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
   AND sub.deleted = 0
-LEFT JOIN payments p ON sub.id = p.subscription_id AND p.deleted = 0
-WHERE gr.id = $1
+WHERE gr.id = $1 AND gr.deleted = 0
 GROUP BY gr.id, gr.name, g.name
 `;
 
+// Get overall subscription stats
 const getOverallSubscriptionStats = `
 SELECT 
   COUNT(DISTINCT s.id) AS total_students,
   COUNT(DISTINCT sub.id) AS total_subscriptions,
   COALESCE(SUM(sub.required_amount), 0) AS total_required,
-  COALESCE(SUM(p.amount), 0) AS total_paid,
-  COALESCE(SUM(sub.required_amount), 0) - COALESCE(SUM(p.amount), 0) AS total_remaining
+  COALESCE(
+    (SELECT SUM(p.amount) FROM payments p 
+     JOIN subscriptions sub2 ON p.subscription_id = sub2.id
+     WHERE sub2.month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+    ), 0
+  ) AS total_paid
 FROM students s
 LEFT JOIN subscriptions sub ON s.id = sub.student_id 
-  AND EXTRACT(MONTH FROM sub.month) = EXTRACT(MONTH FROM CURRENT_DATE)
-  AND EXTRACT(YEAR FROM sub.month) = EXTRACT(YEAR FROM CURRENT_DATE)
+  AND sub.month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
   AND sub.deleted = 0
-LEFT JOIN payments p ON sub.id = p.subscription_id AND p.deleted = 0
-WHERE s.deleted = 0 AND s.active = 1
+WHERE s.deleted = 0
+`;
+
+// Update subscription status
+const updateSubscriptionStatus = `
+UPDATE subscriptions
+SET status = $1
+WHERE id = $2 AND deleted = 0
+RETURNING *
+`;
+
+// Delete subscription
+const deleteSubscription = `
+DELETE FROM subscriptions
+WHERE id = $1
+RETURNING *
 `;
 
 module.exports = {
+  createSubscription,
   getStudentSubscriptions,
   getSubscriptionsByMonth,
   getStudentsWithoutSubscriptionCurrentMonth,
   getGradeSubscriptionStats,
   getGroupSubscriptionStats,
-  getOverallSubscriptionStats
+  getOverallSubscriptionStats,
+  updateSubscriptionStatus,
+  deleteSubscription,
 };

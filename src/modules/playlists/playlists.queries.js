@@ -1,3 +1,15 @@
+/* ============================================
+   PLAYLISTS QUERIES
+   ============================================ */
+
+// Create playlist
+const createPlaylist = `
+INSERT INTO playlists (title, description, grade_id, thumbnail_url, created_by)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING *
+`;
+
+// Get all playlists - 20 per page
 const getAllPlaylists = `
 SELECT 
   p.id,
@@ -5,25 +17,20 @@ SELECT
   p.description,
   p.grade_id,
   g.name AS grade_name,
-  p.is_active,
+  p.thumbnail_url,
   p.created_by,
   p.created_at,
-  COUNT(pv.id) AS videos_count,
-  (
-    SELECT v.youtube_url 
-    FROM playlist_videos pv2
-    JOIN videos v ON pv2.video_id = v.id
-    WHERE pv2.playlist_id = p.id
-    ORDER BY pv2.added_at ASC
-    LIMIT 1
-  ) AS thumbnail_url
+  p.updated_at,
+  COUNT(pv.id) AS videos_count
 FROM playlists p
 LEFT JOIN grades g ON p.grade_id = g.id AND g.deleted = 0
 LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
 GROUP BY p.id, g.name
 ORDER BY p.created_at DESC
+LIMIT 20 OFFSET (($1::int - 1) * 20)
 `;
 
+// Get playlist by ID
 const getPlaylistById = `
 SELECT 
   p.id,
@@ -31,18 +38,11 @@ SELECT
   p.description,
   p.grade_id,
   g.name AS grade_name,
-  p.is_active,
+  p.thumbnail_url,
   p.created_by,
   p.created_at,
-  COUNT(pv.id) AS videos_count,
-  (
-    SELECT v.youtube_url 
-    FROM playlist_videos pv2
-    JOIN videos v ON pv2.video_id = v.id
-    WHERE pv2.playlist_id = p.id
-    ORDER BY pv2.added_at ASC
-    LIMIT 1
-  ) AS thumbnail_url
+  p.updated_at,
+  COUNT(pv.id) AS videos_count
 FROM playlists p
 LEFT JOIN grades g ON p.grade_id = g.id AND g.deleted = 0
 LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
@@ -50,6 +50,7 @@ WHERE p.id = $1
 GROUP BY p.id, g.name
 `;
 
+// Get playlists by grade - 20 per page
 const getPlaylistsByGradeId = `
 SELECT 
   p.id,
@@ -57,133 +58,44 @@ SELECT
   p.description,
   p.grade_id,
   g.name AS grade_name,
-  p.is_active,
-  p.created_by,
+  p.thumbnail_url,
   p.created_at,
-  COUNT(pv.id) AS videos_count,
-  (
-    SELECT v.youtube_url 
-    FROM playlist_videos pv2
-    JOIN videos v ON pv2.video_id = v.id
-    WHERE pv2.playlist_id = p.id
-    ORDER BY pv2.added_at ASC
-    LIMIT 1
-  ) AS thumbnail_url
+  p.updated_at,
+  COUNT(pv.id) AS videos_count
 FROM playlists p
 LEFT JOIN grades g ON p.grade_id = g.id AND g.deleted = 0
 LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
 WHERE p.grade_id = $1
 GROUP BY p.id, g.name
 ORDER BY p.created_at DESC
+LIMIT 20 OFFSET (($2::int - 1) * 20)
 `;
 
-const getActivePlaylists = `
-SELECT 
-  p.id,
-  p.title,
-  p.description,
-  p.grade_id,
-  g.name AS grade_name,
-  p.is_active,
-  p.created_by,
-  p.created_at,
-  COUNT(pv.id) AS videos_count,
-  (
-    SELECT v.youtube_url 
-    FROM playlist_videos pv2
-    JOIN videos v ON pv2.video_id = v.id
-    WHERE pv2.playlist_id = p.id
-    ORDER BY pv2.added_at ASC
-    LIMIT 1
-  ) AS thumbnail_url
-FROM playlists p
-LEFT JOIN grades g ON p.grade_id = g.id AND g.deleted = 0
-LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
-WHERE p.is_active = 1
-GROUP BY p.id, g.name
-ORDER BY p.created_at DESC
-`;
-
-const getInactivePlaylists = `
-SELECT 
-  p.id,
-  p.title,
-  p.description,
-  p.grade_id,
-  g.name AS grade_name,
-  p.is_active,
-  p.created_by,
-  p.created_at,
-  COUNT(pv.id) AS videos_count,
-  (
-    SELECT v.youtube_url 
-    FROM playlist_videos pv2
-    JOIN videos v ON pv2.video_id = v.id
-    WHERE pv2.playlist_id = p.id
-    ORDER BY pv2.added_at ASC
-    LIMIT 1
-  ) AS thumbnail_url
-FROM playlists p
-LEFT JOIN grades g ON p.grade_id = g.id AND g.deleted = 0
-LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
-WHERE p.is_active = 0
-GROUP BY p.id, g.name
-ORDER BY p.created_at DESC
-`;
-
-const createPlaylist = `
-INSERT INTO playlists (title, description, grade_id, created_by)
-VALUES ($1, $2, $3, $4)
-RETURNING *
-`;
-
+// Update playlist
 const updatePlaylist = `
 UPDATE playlists
 SET 
   title = $2,
   description = $3,
   grade_id = $4,
-  is_active = $5,
+  thumbnail_url = $5,
+  updated_at = NOW()
 WHERE id = $1
 RETURNING *
 `;
 
-const deletePlaylist = `
-UPDATE playlists SET deleted = 1 WHERE id = $1 RETURNING id
-`;
-
-const getPlaylistStats = `
-SELECT 
-  p.id,
-  p.title,
-  COUNT(pv.video_id) AS videos_count
-FROM playlists p
-LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
-WHERE p.id = $1
-GROUP BY p.id, p.title
-`;
-
-const getGradePlaylistsStats = `
-SELECT 
-  p.id,
-  p.title,
-  COUNT(pv.video_id) AS videos_count
-FROM playlists p
-LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
-WHERE p.grade_id = $1
-GROUP BY p.id, p.title
-ORDER BY p.title ASC
+// Hard delete playlist
+const hardDeletePlaylist = `
+DELETE FROM playlists
+WHERE id = $1
+RETURNING id
 `;
 
 module.exports = {
+  createPlaylist,
   getAllPlaylists,
   getPlaylistById,
   getPlaylistsByGradeId,
-  getActivePlaylists,
-  getInactivePlaylists,
-  createPlaylist,
   updatePlaylist,
-  deletePlaylist,
-  getPlaylistStats,
-  getGradePlaylistsStats,
+  hardDeletePlaylist,
 };

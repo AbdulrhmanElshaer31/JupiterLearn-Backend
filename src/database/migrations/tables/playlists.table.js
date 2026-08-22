@@ -7,6 +7,7 @@ async function createPlaylistsTable() {
       title VARCHAR(255) NOT NULL,
       description TEXT,
       grade_id INTEGER NOT NULL REFERENCES grades(id) ON DELETE CASCADE,
+      thumbnail_url VARCHAR(255),
       created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()

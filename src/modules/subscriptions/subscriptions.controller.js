@@ -1,11 +1,35 @@
 const subscriptionService = require("./subscriptions.service");
 
+// Create subscription
+const createSubscription = async (req, res, next) => {
+  try {
+    const subscription = await subscriptionService.createSubscription(req.body);
+
+    if (!subscription) {
+      throw new Error("فشل إنشاء الاشتراك حاول مرة أخرى!");
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "تم إنشاء الاشتراك بنجاح!",
+      data: subscription,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get student subscriptions
 const getStudentSubscriptions = async (req, res, next) => {
   try {
-    const subscriptions = await subscriptionService.getStudentSubscriptions(req.params.studentId);
+    const { studentId } = req.params;
+
+    const subscriptions =
+      await subscriptionService.getStudentSubscriptions(studentId);
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الاشتراكات بنجاح!",
       data: subscriptions,
     });
   } catch (error) {
@@ -13,12 +37,17 @@ const getStudentSubscriptions = async (req, res, next) => {
   }
 };
 
+// Get subscriptions by month
 const getSubscriptionsByMonth = async (req, res, next) => {
   try {
-    const subscriptions = await subscriptionService.getSubscriptionsByMonth(req.params.month);
+    const { month } = req.params;
+
+    const subscriptions =
+      await subscriptionService.getSubscriptionsByMonth(month);
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الاشتراكات بنجاح!",
       data: subscriptions,
     });
   } catch (error) {
@@ -26,12 +55,15 @@ const getSubscriptionsByMonth = async (req, res, next) => {
   }
 };
 
+// Get students without subscription
 const getStudentsWithoutSubscriptionCurrentMonth = async (req, res, next) => {
   try {
-    const students = await subscriptionService.getStudentsWithoutSubscriptionCurrentMonth();
+    const students =
+      await subscriptionService.getStudentsWithoutSubscriptionCurrentMonth();
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الطلاب بنجاح!",
       data: students,
     });
   } catch (error) {
@@ -39,13 +71,20 @@ const getStudentsWithoutSubscriptionCurrentMonth = async (req, res, next) => {
   }
 };
 
+// Get grade subscription stats
 const getGradeSubscriptionStats = async (req, res, next) => {
   try {
-    const stats = await subscriptionService.getGradeSubscriptionStats(req.params.gradeId);
-    if (!stats) throw new Error("Grade Not Found!");
+    const { gradeId } = req.params;
+
+    const stats = await subscriptionService.getGradeSubscriptionStats(gradeId);
+
+    if (!stats) {
+      throw new Error("فشل تحميل الإحصائيات حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الإحصائيات بنجاح!",
       data: stats,
     });
   } catch (error) {
@@ -53,13 +92,20 @@ const getGradeSubscriptionStats = async (req, res, next) => {
   }
 };
 
+// Get group subscription stats
 const getGroupSubscriptionStats = async (req, res, next) => {
   try {
-    const stats = await subscriptionService.getGroupSubscriptionStats(req.params.groupId);
-    if (!stats) throw new Error("Group Not Found!");
+    const { groupId } = req.params;
+
+    const stats = await subscriptionService.getGroupSubscriptionStats(groupId);
+
+    if (!stats) {
+      throw new Error("فشل تحميل الإحصائيات حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الإحصائيات بنجاح!",
       data: stats,
     });
   } catch (error) {
@@ -67,13 +113,61 @@ const getGroupSubscriptionStats = async (req, res, next) => {
   }
 };
 
+// Get overall subscription stats
 const getOverallSubscriptionStats = async (req, res, next) => {
   try {
     const stats = await subscriptionService.getOverallSubscriptionStats();
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الإحصائيات بنجاح!",
       data: stats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update subscription status
+const updateSubscriptionStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const subscription = await subscriptionService.updateSubscriptionStatus(
+      id,
+      status,
+    );
+
+    if (!subscription) {
+      throw new Error("فشل تعديل حالة الاشتراك حاول مرة أخرى!");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم تعديل حالة الاشتراك بنجاح!",
+      data: subscription,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete subscription
+const deleteSubscription = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const subscription = await subscriptionService.deleteSubscription(id);
+
+    if (!subscription) {
+      throw new Error("فشل حذف الاشتراك حاول مرة أخرى!");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم حذف الاشتراك بنجاح!",
+      data: subscription,
     });
   } catch (error) {
     next(error);
@@ -81,10 +175,13 @@ const getOverallSubscriptionStats = async (req, res, next) => {
 };
 
 module.exports = {
+  createSubscription,
   getStudentSubscriptions,
   getSubscriptionsByMonth,
   getStudentsWithoutSubscriptionCurrentMonth,
   getGradeSubscriptionStats,
   getGroupSubscriptionStats,
-  getOverallSubscriptionStats
+  getOverallSubscriptionStats,
+  updateSubscriptionStatus,
+  deleteSubscription,
 };

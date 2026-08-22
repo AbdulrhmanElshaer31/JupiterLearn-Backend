@@ -1,76 +1,82 @@
 const { query } = require("../../config/database");
 const playlistQueries = require("./playlists.queries");
 
-const getAllPlaylists = async () => {
-  const result = await query(playlistQueries.getAllPlaylists);
+// Create playlist
+const createPlaylist = async (playlistData) => {
+  const {
+    title,
+    description,
+    grade_id,
+    thumbnail_url = null,
+    created_by,
+  } = playlistData;
+
+  const result = await query(playlistQueries.createPlaylist, [
+    title,
+    description,
+    grade_id,
+    thumbnail_url,
+    created_by,
+  ]);
+  return result.rows[0];
+};
+
+// Get all playlists
+const getAllPlaylists = async (page = 1) => {
+  const result = await query(playlistQueries.getAllPlaylists, [page]);
   return result.rows;
 };
 
+// Get playlist by ID
 const getPlaylistById = async (playlistId) => {
   const result = await query(playlistQueries.getPlaylistById, [playlistId]);
   return result.rows[0];
 };
 
-const getPlaylistsByGradeId = async (gradeId) => {
-  const result = await query(playlistQueries.getPlaylistsByGradeId, [gradeId]);
+// Get playlists by grade
+const getPlaylistsByGradeId = async (gradeId, page = 1) => {
+  const result = await query(playlistQueries.getPlaylistsByGradeId, [
+    gradeId,
+    page,
+  ]);
   return result.rows;
 };
 
-const getActivePlaylists = async () => {
-  const result = await query(playlistQueries.getActivePlaylists);
-  return result.rows;
-};
-
-const getInactivePlaylists = async () => {
-  const result = await query(playlistQueries.getInactivePlaylists);
-  return result.rows;
-};
-
-const createPlaylist = async (title, description, gradeId, createdBy) => {
-  const result = await query(playlistQueries.createPlaylist, [title, description, gradeId, createdBy]);
-  return result.rows[0];
-};
-
-
-const updatePlaylist = async (playlistId, title, description, gradeId, isActive) => {
-  const existing = await query("SELECT * FROM playlists WHERE id = $1", [playlistId]);
+// Update playlist
+const updatePlaylist = async (playlistId, playlistData) => {
+  const existing = await query("SELECT * FROM playlists WHERE id = $1", [
+    playlistId,
+  ]);
   if (!existing.rows[0]) return null;
-  
- const updated = {
-  title: title ?? existing.rows[0].title,
-  description: description ?? existing.rows[0].description,
-  grade_id: grade_id ?? existing.rows[0].grade_id,  // ✅
-  is_active: isActive ?? existing.rows[0].is_active
-};
-  
-  const result = await query(playlistQueries.updatePlaylist, [playlistId, updated.title, updated.description, updated.grade_id, updated.is_active]);
+
+  const updated = {
+    title: playlistData.title ?? existing.rows[0].title,
+    description: playlistData.description ?? existing.rows[0].description,
+    grade_id: playlistData.grade_id ?? existing.rows[0].grade_id,
+    thumbnail_url: playlistData.thumbnail_url ?? existing.rows[0].thumbnail_url,
+  };
+
+  const result = await query(playlistQueries.updatePlaylist, [
+    playlistId,
+    updated.title,
+    updated.description,
+    updated.grade_id,
+    updated.thumbnail_url,
+  ]);
   return result.rows[0];
 };
 
-const deletePlaylist = async (playlistId) => {
-  const result = await query(playlistQueries.deletePlaylist, [playlistId]);
+// Hard delete playlist
+const hardDeletePlaylist = async (playlistId) => {
+  const result = await query(playlistQueries.hardDeletePlaylist, [playlistId]);
   return result.rows[0];
-};
-
-const getPlaylistStats = async (playlistId) => {
-  const result = await query(playlistQueries.getPlaylistStats, [playlistId]);
-  return result.rows[0];
-};
-
-const getGradePlaylistsStats = async (gradeId) => {
-  const result = await query(playlistQueries.getGradePlaylistsStats, [gradeId]);
-  return result.rows;
 };
 
 module.exports = {
+  createPlaylist,
   getAllPlaylists,
   getPlaylistById,
   getPlaylistsByGradeId,
-  getActivePlaylists,
-  getInactivePlaylists,
-  createPlaylist,
   updatePlaylist,
-  deletePlaylist,
-  getPlaylistStats,
-  getGradePlaylistsStats
+  hardDeletePlaylist,
 };

@@ -1,11 +1,14 @@
 const playlistVideoService = require("./playlist_videos.service");
 
+// Get playlist videos
 const getPlaylistVideos = async (req, res, next) => {
   try {
-    const videos = await playlistVideoService.getPlaylistVideos(req.params.playlistId);
+    const { playlistId } = req.params;
+    const videos = await playlistVideoService.getPlaylistVideos(playlistId);
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
+      message: "تم تحميل الفيديوهات بنجاح!",
       data: videos,
     });
   } catch (error) {
@@ -13,13 +16,23 @@ const getPlaylistVideos = async (req, res, next) => {
   }
 };
 
+// Add video to playlist
 const addVideoToPlaylist = async (req, res, next) => {
   try {
-    const { playlistId, videoId } = req.body;
-    const playlistVideo = await playlistVideoService.addVideoToPlaylist(playlistId, videoId);
+    const { playlist_id, video_id } = req.body;
+
+    const playlistVideo = await playlistVideoService.addVideoToPlaylist(
+      playlist_id,
+      video_id,
+    );
+
+    if (!playlistVideo) {
+      throw new Error("فشل إضافة الفيديو للقائمة حاول مرة أخرى!");
+    }
+
     return res.status(201).json({
       success: true,
-      message: "Video Added To Playlist!",
+      message: "تم إضافة الفيديو للقائمة بنجاح!",
       data: playlistVideo,
     });
   } catch (error) {
@@ -27,14 +40,20 @@ const addVideoToPlaylist = async (req, res, next) => {
   }
 };
 
+// Remove video from playlist
 const removeVideoFromPlaylist = async (req, res, next) => {
   try {
-    const playlistVideo = await playlistVideoService.removeVideoFromPlaylist(req.params.id);
-    if (!playlistVideo) throw new Error("Not Found!");
+    const { id } = req.params;
+    const result = await playlistVideoService.removeVideoFromPlaylist(id);
+
+    if (!result) {
+      throw new Error("فشل حذف الفيديو من القائمة حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Video Removed From Playlist!",
-      data: playlistVideo,
+      message: "تم حذف الفيديو من القائمة بنجاح!",
+      data: result,
     });
   } catch (error) {
     next(error);
@@ -44,5 +63,5 @@ const removeVideoFromPlaylist = async (req, res, next) => {
 module.exports = {
   getPlaylistVideos,
   addVideoToPlaylist,
-  removeVideoFromPlaylist
+  removeVideoFromPlaylist,
 };
