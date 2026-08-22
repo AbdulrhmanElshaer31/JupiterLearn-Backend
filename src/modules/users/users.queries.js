@@ -9,7 +9,7 @@ SELECT
   is_active,
   created_at
 FROM users
-WHERE role = 'assistant' AND is_active = 1
+WHERE role = 'assistant' AND is_active = 1 AND deleted = 0
 ORDER BY full_name ASC
 `;
 
@@ -22,7 +22,7 @@ SELECT
   is_active,
   created_at
 FROM users
-WHERE is_active = 1
+WHERE is_active = 1  AND deleted = 0
 ORDER BY full_name ASC
 `;
 

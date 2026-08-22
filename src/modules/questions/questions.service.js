@@ -10,8 +10,8 @@ const getQuestionById = async (questionId) => {
 };
 const createQuestion = async (examId, questionText, type, order) => {
   const result = await query(questionQueries.createQuestion, [
-    examId,
-    questionText,
+    exam_id,
+    question_text,
     type,
     order,
   ]);
@@ -25,7 +25,7 @@ const updateQuestion = async (questionId, questionText, type, order) => {
   if (!existing.rows[0]) return null;
 
   const updated = {
-    question_text: questionText ?? existing.rows[0].question_text,
+    question_text: question_text ?? existing.rows[0].question_text,
     type: type ?? existing.rows[0].type,
     order: order ?? existing.rows[0].order,
   };

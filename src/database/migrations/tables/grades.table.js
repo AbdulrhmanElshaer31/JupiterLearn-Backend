@@ -6,19 +6,13 @@ async function createGradesTable() {
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL UNIQUE,
       monthly_price DECIMAL(10,2) DEFAULT 0,
-      platform_enabled INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1,
-      deleted INTEGER DEFAULT 0,
-      whatsapp_group_link TEXT DEFAULT ''
+      deleted INTEGER DEFAULT 0
     )
   `);
 
   await query(`CREATE INDEX IF NOT EXISTS idx_grades_name ON grades(name)`);
-  await query(
-    `CREATE INDEX IF NOT EXISTS idx_grades_is_synced ON grades(is_synced)`,
-  );
   await query(
     `CREATE INDEX IF NOT EXISTS idx_grades_deleted ON grades(deleted)`,
   );

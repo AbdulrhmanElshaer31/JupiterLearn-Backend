@@ -1,434 +1,339 @@
 const { query } = require("../../config/database");
-const stdQueries = require("./students.queries");
+const stdQr = require("./students.queries");
 
-const getStudentProfile = async (student_id) => {
-  const result = await query(stdQueries.getStudentProfile, [student_id]);
+//PART 1: CRUD & SEARCH OPERATIONS
+
+// Create a new student
+const createStudent = async (stdInfo) => {
+  const {
+    barcode,
+    full_name,
+    phone,
+    parent_phone,
+    parent_token,
+    grade_id,
+    group_id,
+    notes,
+  } = stdInfo;
+  const result = await query(stdQr.createStudent, [
+    barcode,
+    full_name,
+    phone,
+    parent_phone,
+    parent_token,
+    grade_id,
+    group_id,
+    notes,
+  ]);
   return result.rows[0];
 };
 
-const getStudentQuickStats = async (student_id) => {
-  const result = await query(stdQueries.getStudentQuickStats, [student_id]);
+// Get all students with filters
+const getAllStudents = async (filters) => {
+  const { search = "", grade_id = null, group_id = null, page = 1 } = filters;
+  const result = await query(stdQr.getAllStudents, [
+    search,
+    grade_id,
+    group_id,
+    page,
+  ]);
+  return result.rows;
+};
+
+// Get a single student by ID
+const getStudentById = async (id) => {
+  const result = await query(stdQr.getStudentById, [id]);
   return result.rows[0];
 };
 
-const getAttendanceHistory = async (student_id, page = 1, limit = 20) => {
-  const offset = (page - 1) * limit;
-  const result = await query(stdQueries.getAttendanceHistory, [
-    student_id,
-    limit,
-    offset,
-  ]);
-  return result.rows;
-};
-
-const getMonthlyAttendanceStats = async (student_id) => {
-  const result = await query(stdQueries.getMonthlyAttendanceStats, [
-    student_id,
-  ]);
-  return result.rows;
-};
-
-const getConsecutiveAbsences = async (student_id) => {
-  const result = await query(stdQueries.getConsecutiveAbsences, [student_id]);
-  return result.rows[0];
-};
-
-const getPaymentHistory = async (student_id, page = 1, limit = 20) => {
-  const offset = (page - 1) * limit;
-  const result = await query(stdQueries.getPaymentHistory, [
-    student_id,
-    limit,
-    offset,
-  ]);
-  return result.rows;
-};
-
-const getRemainingBalance = async (student_id) => {
-  const result = await query(stdQueries.getRemainingBalance, [student_id]);
-  return result.rows[0];
-};
-
-const getCurrentSubscription = async (student_id) => {
-  const result = await query(stdQueries.getCurrentSubscription, [student_id]);
-  return result.rows[0];
-};
-
-const getStudentPaperExams = async (student_id, page = 1, limit = 20) => {
-  const offset = (page - 1) * limit;
-  const result = await query(stdQueries.getStudentPaperExams, [
-    student_id,
-    limit,
-    offset,
-  ]);
-  return result.rows;
-};
-
-const getStudentExamResults = async (student_id) => {
-  const result = await query(stdQueries.getStudentExamResults, [student_id]);
-  return result.rows;
-};
-
-const getAvailableOnlineExams = async (student_id, page = 1, limit = 20) => {
-  const offset = (page - 1) * limit;
-  const result = await query(stdQueries.getAvailableOnlineExams, [
-    student_id,
-    limit,
-    offset,
-  ]);
-  return result.rows;
-};
-
-const getStudentOnlineExams = async (student_id, page = 1, limit = 20) => {
-  const offset = (page - 1) * limit;
-  const result = await query(stdQueries.getStudentOnlineExams, [
-    student_id,
-    limit,
-    offset,
-  ]);
-  return result.rows;
-};
-
-const getStudentExamAnswers = async (exam_id, student_id) => {
-  const result = await query(stdQueries.getStudentExamAnswers, [
-    exam_id,
-    student_id,
-  ]);
-  return result.rows;
-};
-
-const getStudentAssignments = async (student_id, page = 1, limit = 20) => {
-  const offset = (page - 1) * limit;
-  const result = await query(stdQueries.getStudentAssignments, [
-    student_id,
-    limit,
-    offset,
-  ]);
-  return result.rows;
-};
-
-const getStudentSubmissions = async (student_id, page = 1, limit = 20) => {
-  const offset = (page - 1) * limit;
-  const result = await query(stdQueries.getStudentSubmissions, [
-    student_id,
-    limit,
-    offset,
-  ]);
-  return result.rows;
-};
-
-const getStudentPlaylists = async (student_id) => {
-  const result = await query(stdQueries.getStudentPlaylists, [student_id]);
-  return result.rows;
-};
-
-const getPlaylistVideos = async (playlist_id) => {
-  const result = await query(stdQueries.getPlaylistVideos, [playlist_id]);
-  return result.rows;
-};
-
-const getAllStudents = async (
-  page = 1,
-  limit = 20,
-  search = "",
-  gradeId = null,
-  groupId = null,
-) => {
-  const offset = (page - 1) * limit;
-  const result = await query(stdQueries.getAllStudents, [
-    `%${search}%`,
-    gradeId,
-    groupId,
-    limit,
-    offset,
-  ]);
-  return result.rows;
-};
-
-const getStudentsCount = async (
-  search = "",
-  gradeId = null,
-  groupId = null,
-) => {
-  const result = await query(stdQueries.getStudentsCount, [
-    `%${search}%`,
-    gradeId,
-    groupId,
-  ]);
-  return parseInt(result.rows[0].count);
-};
-
+// Get a student by barcode
 const getStudentByBarcode = async (barcode) => {
-  const result = await query(stdQueries.getStudentByBarcode, [barcode]);
+  const result = await query(stdQr.getStudentByBarcode, [barcode]);
   return result.rows[0];
 };
 
-const getStudentById = async (studentId) => {
-  const result = await query(stdQueries.getStudentById, [studentId]);
+// Find a student by phone number
+const findStudentByPhone = async (phone) => {
+  const result = await query(stdQr.findStudentByPhone, [phone]);
   return result.rows[0];
 };
 
-const getStudentSubscriptions = async (student_id) => {
-  const result = await query(
-    `
-    SELECT 
-      sub.id,
-      sub.month,
-      sub.required_amount,
-      sub.status,
-      COALESCE(SUM(p.amount), 0) AS paid_amount,
-      sub.required_amount - COALESCE(SUM(p.amount), 0) AS remaining_amount
-    FROM subscriptions sub
-    LEFT JOIN payments p ON sub.id = p.subscription_id AND p.deleted = 0
-    WHERE sub.student_id = $1 AND sub.deleted = 0
-    GROUP BY sub.id, sub.month, sub.required_amount, sub.status
-    ORDER BY sub.month DESC
-  `,
-    [student_id],
-  );
+// Find students by parent phone number
+const findStudentByParentPhone = async (parentPhone) => {
+  const result = await query(stdQr.findStudentByParentPhone, [parentPhone]);
   return result.rows;
 };
 
-const getAllGrades = async () => {
-  const result = await query(
-    `SELECT id, name FROM grades WHERE deleted = 0 ORDER BY name ASC`,
-  );
+// Get all students in a specific grade
+const getStudentsByGradeId = async (gradeId, page = 1) => {
+  const result = await query(stdQr.getStudentsByGradeId, [gradeId, page]);
   return result.rows;
 };
 
-const getAllGroups = async () => {
-  const result = await query(
-    `SELECT id, name, grade_id FROM groups WHERE deleted = 0 ORDER BY name ASC`,
-  );
+// Get all students in a specific group
+const getStudentsByGroupId = async (groupId, page = 1) => {
+  const result = await query(stdQr.getStudentsByGroupId, [groupId, page]);
   return result.rows;
 };
 
-const getStudentFullRecords = async (studentId) => {
-  const [
-    profile,
-    stats,
-    attendanceRecords,
-    paymentRecords,
-    examRecords,
-    onlineExamRecords,
-    assignmentRecords,
-  ] = await Promise.all([
-    getStudentProfile(studentId),
-    getStudentQuickStats(studentId),
-    getAttendanceHistory(studentId, 1, 100),
-    getPaymentHistory(studentId, 1, 100),
-    getStudentPaperExams(studentId, 1, 100),
-    getStudentOnlineExams(studentId, 1, 100),
-    getStudentSubmissions(studentId, 1, 100),
-  ]);
-
-  return {
-    profile,
-    stats,
-    attendanceRecords,
-    paymentRecords,
-    examRecords,
-    onlineExamRecords,
-    assignmentRecords,
-  };
+// Get all deleted students
+const getDeletedStudents = async (page = 1) => {
+  const result = await query(stdQr.getDeletedStudents, [page]);
+  return result.rows;
 };
 
-const startOnlineExam = async (examId, studentId) => {
-  const exam = await query(stdQueries.checkExamAvailability, [
-    examId,
-    studentId,
+// Update a student's full information
+const updateStudent = async (id, stdInfo) => {
+  const { barcode, full_name, phone, parent_phone, grade_id, group_id, notes } =
+    stdInfo;
+  const result = await query(stdQr.updateStudent, [
+    barcode,
+    full_name,
+    phone,
+    parent_phone,
+    grade_id,
+    group_id,
+    notes,
+    id,
   ]);
-  if (!exam.rows[0]) throw new Error("Exam not available!");
-
-  const now = new Date();
-  if (now < new Date(exam.rows[0].start_at))
-    throw new Error("Exam not started yet!");
-  if (now > new Date(exam.rows[0].end_at)) throw new Error("Exam has ended!");
-
-  await query(
-    `DELETE FROM student_exams WHERE exam_id = $1 AND student_id = $2 AND submitted_at IS NULL`,
-    [examId, studentId],
-  );
-
-  const existing = await query(stdQueries.checkExistingAttempt, [
-    examId,
-    studentId,
-  ]);
-  if (existing.rows.length > 0) throw new Error("Already attempted!");
-
-  const attempt = await query(stdQueries.createExamAttempt, [
-    examId,
-    studentId,
-  ]);
-
-  const questions = await query(stdQueries.getExamQuestions, [
-    examId,
-    exam.rows[0].randomize_questions,
-  ]);
-
-  for (const q of questions.rows) {
-    if (q.type === "mcq" || q.type === "true_false") {
-      const options = await query(stdQueries.getQuestionOptions, [q.id]);
-      q.options = options.rows;
-    }
-  }
-
-  return {
-    attempt_id: attempt.rows[0].id,
-    questions: questions.rows,
-    duration_minutes: exam.rows[0].duration_minutes,
-    started_at: attempt.rows[0].started_at,
-    end_at: exam.rows[0].end_at,
-    full_mark: exam.rows[0].full_mark,
-  };
+  return result.rows[0];
 };
 
-const answerQuestion = async (
-  examId,
-  studentId,
-  questionId,
-  selectedOptionId,
-) => {
-  const active = await query(stdQueries.checkActiveAttempt, [
-    examId,
-    studentId,
+// Update student's profile image
+const updateStudentProfileImage = async (id, profileImage) => {
+  const result = await query(stdQr.updateStudentProfileImage, [
+    profileImage,
+    id,
   ]);
-  if (!active.rows[0]) throw new Error("No active exam attempt!");
-
-  const question = await query(stdQueries.checkQuestionBelongsToExam, [
-    questionId,
-    examId,
-  ]);
-  if (!question.rows[0]) throw new Error("Question not in this exam!");
-
-  const option = await query(stdQueries.checkOptionBelongsToQuestion, [
-    selectedOptionId,
-    questionId,
-  ]);
-  if (!option.rows[0]) throw new Error("Option not for this question!");
-
-  const isCorrect = option.rows[0].is_correct;
-
-  const existing = await query(stdQueries.checkExistingAnswer, [
-    examId,
-    studentId,
-    questionId,
-  ]);
-
-  if (existing.rows.length > 0) {
-    const updated = await query(stdQueries.updateAnswer, [
-      selectedOptionId,
-      isCorrect,
-      examId,
-      studentId,
-      questionId,
-    ]);
-    return { id: updated.rows[0].id, updated: true };
-  } else {
-    const inserted = await query(stdQueries.insertAnswer, [
-      examId,
-      studentId,
-      questionId,
-      selectedOptionId,
-      isCorrect,
-    ]);
-    return { id: inserted.rows[0].id, inserted: true };
-  }
+  return result.rows[0];
 };
 
-const submitOnlineExam = async (attemptId, studentId, answers) => {
-  const active = await query(
-    `SELECT se.id, se.exam_id, se.started_at, oe.duration_minutes, oe.end_at 
-     FROM student_exams se
-     JOIN online_exams oe ON se.exam_id = oe.id
-     WHERE se.id = $1 AND se.student_id = $2 AND se.submitted_at IS NULL`,
-    [attemptId, studentId],
-  );
+// Delete student's profile image
+const deleteStudentProfileImage = async (id) => {
+  const result = await query(stdQr.deleteStudentProfileImage, [id]);
+  return result.rows[0];
+};
 
-  if (!active.rows[0]) throw new Error("No active exam attempt!");
+// Get student's profile image
+const getStudentProfileImage = async (id) => {
+  const result = await query(stdQr.getStudentProfileImage, [id]);
+  return result.rows[0];
+};
 
-  const now = new Date();
-  if (now > new Date(active.rows[0].end_at)) {
-    await query(stdQueries.finalizeExamAttempt2, [
-      attemptId,
-      studentId,
-      0,
-      0,
-      0,
-    ]);
-    throw new Error("Exam time has ended!");
-  }
+// Update student's password
+const updateStudentPassword = async (id, password) => {
+  const result = await query(stdQr.updateStudentPassword, [password, id]);
+  return result.rows[0];
+};
 
-  const examId = active.rows[0].exam_id;
-  const answersJson = JSON.stringify(answers || []);
+// Soft delete a student
+const softDeleteStudent = async (id) => {
+  const result = await query(stdQr.softDeleteStudent, [id]);
+  return result.rows[0];
+};
 
-  await query(stdQueries.insertBulkAnswers, [examId, studentId, answersJson]);
+// Hard delete a student
+const hardDeleteStudent = async (id) => {
+  const result = await query(stdQr.hardDeleteStudent, [id]);
+  return result.rows[0];
+};
 
-  const score = await query(stdQueries.calculateScoreBulk, [examId, studentId]);
+// Restore a soft-deleted student
+const restoreStudent = async (id) => {
+  const result = await query(stdQr.restoreStudent, [id]);
+  return result.rows[0];
+};
 
-  const result = await query(stdQueries.finalizeExamAttempt2, [
+// Get students count with filters
+const getStudentsCount = async (filters = {}) => {
+  const { search = "", grade_id = null, group_id = null } = filters;
+  const result = await query(stdQr.getStudentsCount, [
+    search,
+    grade_id,
+    group_id,
+  ]);
+  return result.rows[0];
+};
+
+//PART 2: PROFILE & STATISTICS
+
+// Get student full profile
+const getStudentProfile = async (id) => {
+  const result = await query(stdQr.getStudentProfile, [id]);
+  return result.rows[0];
+};
+
+// Get student quick stats
+const getStudentQuickStats = async (id) => {
+  const result = await query(stdQr.getStudentQuickStats, [id]);
+  return result.rows[0];
+};
+
+// Get attendance history with month filter
+const getAttendanceHistory = async (id, month = "", page = 1) => {
+  const result = await query(stdQr.getAttendanceHistory, [id, month, page]);
+  return result.rows;
+};
+
+// Get monthly attendance stats
+const getMonthlyAttendanceStats = async (id) => {
+  const result = await query(stdQr.getMonthlyAttendanceStats, [id]);
+  return result.rows;
+};
+
+// Get total attendance for a specific month
+const getStudentTotalAttendance = async (id, month) => {
+  const result = await query(stdQr.getStudentTotalAttendance, [id, month]);
+  return result.rows[0];
+};
+
+// Get consecutive absences
+const getConsecutiveAbsences = async (id) => {
+  const result = await query(stdQr.getConsecutiveAbsences, [id]);
+  return result.rows[0];
+};
+
+// Get payment history with month filter
+const getPaymentHistory = async (id, month = "", page = 1) => {
+  const result = await query(stdQr.getPaymentHistory, [id, month, page]);
+  return result.rows;
+};
+
+// Get remaining balance
+const getRemainingBalance = async (id) => {
+  const result = await query(stdQr.getRemainingBalance, [id]);
+  return result.rows[0];
+};
+
+// Get current month subscription
+const getCurrentSubscription = async (id) => {
+  const result = await query(stdQr.getCurrentSubscription, [id]);
+  return result.rows[0];
+};
+
+//PART 3: EXAMS, ASSIGNMENTS & CONTENT
+
+// Get all paper exams with student status
+const getStudentPaperExams = async (id, month = "", page = 1) => {
+  const result = await query(stdQr.getStudentPaperExams, [id, month, page]);
+  return result.rows;
+};
+
+// Get student exam results
+const getStudentExamResults = async (id, month = "", page = 1) => {
+  const result = await query(stdQr.getStudentExamResults, [id, month, page]);
+  return result.rows;
+};
+
+// Get available online exams
+const getAvailableOnlineExams = async (id, page = 1) => {
+  const result = await query(stdQr.getAvailableOnlineExams, [id, page]);
+  return result.rows;
+};
+
+// Get student's submitted online exams
+const getStudentOnlineExams = async (id, month = "", page = 1) => {
+  const result = await query(stdQr.getStudentOnlineExams, [id, month, page]);
+  return result.rows;
+};
+
+// Get student answers for a specific exam
+const getStudentExamAnswers = async (examId, studentId) => {
+  const result = await query(stdQr.getStudentExamAnswers, [examId, studentId]);
+  return result.rows;
+};
+
+// Get student assignments
+const getStudentAssignments = async (id, month = "", page = 1) => {
+  const result = await query(stdQr.getStudentAssignments, [id, month, page]);
+  return result.rows;
+};
+
+// Get student submissions
+const getStudentSubmissions = async (id, month = "", page = 1) => {
+  const result = await query(stdQr.getStudentSubmissions, [id, month, page]);
+  return result.rows;
+};
+
+// Get student playlists
+const getStudentPlaylists = async (id) => {
+  const result = await query(stdQr.getStudentPlaylists, [id]);
+  return result.rows;
+};
+
+// Get videos in a playlist
+const getPlaylistVideos = async (playlistId) => {
+  const result = await query(stdQr.getPlaylistVideos, [playlistId]);
+  return result.rows;
+};
+
+// Get specific paper exam details
+const getStudentPaperExamById = async (studentId, examId) => {
+  const result = await query(stdQr.getStudentPaperExamById, [
+    studentId,
+    examId,
+  ]);
+  return result.rows[0];
+};
+
+// Get specific online exam details
+const getStudentOnlineExamById = async (studentId, attemptId) => {
+  const result = await query(stdQr.getStudentOnlineExamById, [
+    studentId,
     attemptId,
-    studentId,
-    score.rows[0].score,
-    score.rows[0].total_questions,
-    score.rows[0].correct_answers,
   ]);
-
-  return {
-    attempt_id: result.rows[0].id,
-    score: parseFloat(result.rows[0].score || score.rows[0].score),
-    total_questions: parseInt(
-      result.rows[0].total_questions || score.rows[0].total_questions,
-    ),
-    correct_answers: parseInt(
-      result.rows[0].correct_answers || score.rows[0].correct_answers,
-    ),
-    submitted_at: result.rows[0].submitted_at,
-  };
+  return result.rows[0];
 };
 
-const submitAssignment = async (assignmentId, studentId, filePath) => {
-  const assignment = await query(stdQueries.checkAssignmentAvailable, [
+// Get specific assignment details
+const getStudentAssignmentById = async (studentId, assignmentId) => {
+  const result = await query(stdQr.getStudentAssignmentById, [
+    studentId,
     assignmentId,
+  ]);
+  return result.rows[0];
+};
+
+// Get specific submission details
+const getStudentSubmissionById = async (submissionId, studentId) => {
+  const result = await query(stdQr.getStudentSubmissionById, [
+    submissionId,
     studentId,
   ]);
-  if (!assignment.rows[0]) throw new Error("Assignment not available!");
-  if (assignment.rows[0].is_closed) throw new Error("Assignment is closed!");
-
-  const existing = await query(stdQueries.checkExistingSubmission, [
-    assignmentId,
-    studentId,
-  ]);
-
-  if (existing.rows.length > 0) {
-    const updated = await query(stdQueries.updateAssignmentSubmission, [
-      assignmentId,
-      studentId,
-      filePath,
-    ]);
-    return { id: updated.rows[0].id, updated: true };
-  } else {
-    const inserted = await query(stdQueries.submitAssignment, [
-      assignmentId,
-      studentId,
-      filePath,
-    ]);
-    return { id: inserted.rows[0].id, inserted: true };
-  }
+  return result.rows[0];
 };
 
 module.exports = {
-  startOnlineExam,
-  answerQuestion,
-  submitOnlineExam,
-  submitAssignment,
+  // Part 1: CRUD & Search
+  createStudent,
+  getAllStudents,
+  getStudentById,
+  getStudentByBarcode,
+  findStudentByPhone,
+  findStudentByParentPhone,
+  getStudentsByGradeId,
+  getStudentsByGroupId,
+  getDeletedStudents,
+  updateStudent,
+  updateStudentProfileImage,
+  deleteStudentProfileImage,
+  getStudentProfileImage,
+  updateStudentPassword,
+  softDeleteStudent,
+  hardDeleteStudent,
+  restoreStudent,
+  getStudentsCount,
+  // Part 2: Profile & Statistics
   getStudentProfile,
   getStudentQuickStats,
   getAttendanceHistory,
   getMonthlyAttendanceStats,
+  getStudentTotalAttendance,
   getConsecutiveAbsences,
   getPaymentHistory,
   getRemainingBalance,
   getCurrentSubscription,
+  // Part 3: Exams, Assignments & Content
   getStudentPaperExams,
   getStudentExamResults,
   getAvailableOnlineExams,
@@ -438,12 +343,8 @@ module.exports = {
   getStudentSubmissions,
   getStudentPlaylists,
   getPlaylistVideos,
-  getAllStudents,
-  getStudentByBarcode,
-  getStudentById,
-  getStudentsCount,
-  getStudentSubscriptions,
-  getAllGrades,
-  getAllGroups,
-  getStudentFullRecords,
+  getStudentPaperExamById,
+  getStudentOnlineExamById,
+  getStudentAssignmentById,
+  getStudentSubmissionById,
 };

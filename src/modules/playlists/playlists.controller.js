@@ -68,8 +68,13 @@ const getInactivePlaylists = async (req, res, next) => {
 
 const createPlaylist = async (req, res, next) => {
   try {
-    const { title, description, gradeId } = req.body;
-    const playlist = await playlistService.createPlaylist(title, description, gradeId, req.userId);
+    const { title, description, grade_id } = req.body;
+    const playlist = await playlistService.createPlaylist(
+      title, 
+      description, 
+      grade_id, 
+      req.clientId  
+    );
     return res.status(201).json({
       success: true,
       message: "Playlist Created!",
@@ -82,8 +87,14 @@ const createPlaylist = async (req, res, next) => {
 
 const updatePlaylist = async (req, res, next) => {
   try {
-    const { title, description, gradeId, isActive } = req.body;
-    const playlist = await playlistService.updatePlaylist(req.params.playlistId, title, description, gradeId, isActive);
+    const { title, description, grade_id, isActive } = req.body;
+    const playlist = await playlistService.updatePlaylist(
+      req.params.playlistId, 
+      title, 
+      description, 
+      grade_id, 
+      isActive
+    )
     if (!playlist) throw new Error("Playlist Not Found!");
     return res.status(200).json({
       success: true,

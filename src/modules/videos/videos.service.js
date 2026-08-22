@@ -29,15 +29,15 @@ const getInactiveVideos = async () => {
 const createVideo = async (
   title,
   description,
-  gradeId,
-  youtubeUrl,
+  grade_id,
+  youtube_url,
   createdBy,
 ) => {
   const result = await query(videoQueries.createVideo, [
     title,
     description,
-    gradeId,
-    youtubeUrl,
+    grade_id,
+    youtube_url,
     createdBy,
   ]);
   return result.rows[0];
@@ -48,8 +48,8 @@ const updateVideo = async (
   videoId,
   title,
   description,
-  gradeId,
-  youtubeUrl,
+  grade_id,
+  youtube_url,
   isActive,
 ) => {
   const existing = await query("SELECT * FROM videos WHERE id = $1", [videoId]);
@@ -58,8 +58,8 @@ const updateVideo = async (
   const updated = {
     title: title ?? existing.rows[0].title,
     description: description ?? existing.rows[0].description,
-    grade_id: gradeId ?? existing.rows[0].grade_id,
-    youtube_url: youtubeUrl ?? existing.rows[0].youtube_url,
+    grade_id: grade_id ?? existing.rows[0].grade_id,
+    youtube_url: youtube_url ?? existing.rows[0].youtube_url,
     is_active: isActive ?? existing.rows[0].is_active,
   };
 

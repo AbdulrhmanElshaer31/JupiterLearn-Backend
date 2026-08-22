@@ -8,7 +8,6 @@ SELECT
   p.is_active,
   p.created_by,
   p.created_at,
-  p.updated_at,
   COUNT(pv.id) AS videos_count,
   (
     SELECT v.youtube_url 
@@ -35,7 +34,6 @@ SELECT
   p.is_active,
   p.created_by,
   p.created_at,
-  p.updated_at,
   COUNT(pv.id) AS videos_count,
   (
     SELECT v.youtube_url 
@@ -62,7 +60,6 @@ SELECT
   p.is_active,
   p.created_by,
   p.created_at,
-  p.updated_at,
   COUNT(pv.id) AS videos_count,
   (
     SELECT v.youtube_url 
@@ -90,7 +87,6 @@ SELECT
   p.is_active,
   p.created_by,
   p.created_at,
-  p.updated_at,
   COUNT(pv.id) AS videos_count,
   (
     SELECT v.youtube_url 
@@ -118,7 +114,6 @@ SELECT
   p.is_active,
   p.created_by,
   p.created_at,
-  p.updated_at,
   COUNT(pv.id) AS videos_count,
   (
     SELECT v.youtube_url 
@@ -149,15 +144,12 @@ SET
   description = $3,
   grade_id = $4,
   is_active = $5,
-  updated_at = NOW()
 WHERE id = $1
 RETURNING *
 `;
 
 const deletePlaylist = `
-DELETE FROM playlists
-WHERE id = $1
-RETURNING id
+UPDATE playlists SET deleted = 1 WHERE id = $1 RETURNING id
 `;
 
 const getPlaylistStats = `

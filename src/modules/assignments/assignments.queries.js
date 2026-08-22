@@ -12,11 +12,11 @@ SELECT
   a.deadline,
   a.is_closed,
   a.created_by,
-  a.created_at,
-  a.updated_at
+  a.created_at
 FROM assignments a
 LEFT JOIN grades g ON a.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON a.group_id = gr.id AND gr.deleted = 0
+LEFT JOIN groups gr ON a.group_id = gr.id
+WHERE a.deleted = 0
 ORDER BY a.deadline DESC
 `;
 
@@ -34,12 +34,11 @@ SELECT
   a.deadline,
   a.is_closed,
   a.created_by,
-  a.created_at,
-  a.updated_at
+  a.created_at
 FROM assignments a
 LEFT JOIN grades g ON a.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON a.group_id = gr.id AND gr.deleted = 0
-WHERE a.id = $1
+LEFT JOIN groups gr ON a.group_id = gr.id
+WHERE a.id = $1 AND a.deleted = 0
 `;
 
 const getAssignmentsByGradeId = `
@@ -56,12 +55,11 @@ SELECT
   a.deadline,
   a.is_closed,
   a.created_by,
-  a.created_at,
-  a.updated_at
+  a.created_at
 FROM assignments a
 LEFT JOIN grades g ON a.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON a.group_id = gr.id AND gr.deleted = 0
-WHERE a.grade_id = $1
+LEFT JOIN groups gr ON a.group_id = gr.id
+WHERE a.grade_id = $1 AND a.deleted = 0
 ORDER BY a.deadline DESC
 `;
 
@@ -79,12 +77,11 @@ SELECT
   a.deadline,
   a.is_closed,
   a.created_by,
-  a.created_at,
-  a.updated_at
+  a.created_at
 FROM assignments a
 LEFT JOIN grades g ON a.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON a.group_id = gr.id AND gr.deleted = 0
-WHERE a.group_id = $1
+LEFT JOIN groups gr ON a.group_id = gr.id
+WHERE a.group_id = $1 AND a.deleted = 0
 ORDER BY a.deadline DESC
 `;
 
@@ -104,14 +101,14 @@ SET
   file_path = $6,
   full_mark = $7,
   deadline = $8,
-  is_closed = $9,
-  updated_at = NOW()
+  is_closed = $9
 WHERE id = $1
 RETURNING *
 `;
 
 const deleteAssignment = `
-DELETE FROM assignments
+UPDATE assignments
+SET deleted = 1
 WHERE id = $1
 RETURNING id
 `;

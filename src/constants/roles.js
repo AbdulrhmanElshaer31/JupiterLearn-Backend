@@ -3,4 +3,5 @@ module.exports = {
   ASSISTANT: "assistant",
   STUDENT: "student",
   PARENT: "parent",
+  SUPER_ADMIN:"SUPER_ADMIN"
 };

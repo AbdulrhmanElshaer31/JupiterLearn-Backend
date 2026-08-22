@@ -7,15 +7,9 @@ async function createPaymentsTable() {
       subscription_id INTEGER NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
       student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
       amount DECIMAL(10,2) NOT NULL,
-      is_full_payment INTEGER DEFAULT 0,
-      remaining_before DECIMAL(10,2) DEFAULT 0,
-      remaining_after DECIMAL(10,2) DEFAULT 0,
-      payment_date DATE NOT NULL,
+      payment_date TIMESTAMP NOT NULL DEFAULT NOW(),
       notes TEXT,
-      created_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1,
-      deleted INTEGER DEFAULT 0
-
+      created_at TIMESTAMP DEFAULT NOW()
     )
   `);
 
@@ -28,12 +22,7 @@ async function createPaymentsTable() {
   await query(
     `CREATE INDEX IF NOT EXISTS idx_payments_date ON payments(payment_date)`,
   );
-  await query(
-    `CREATE INDEX IF NOT EXISTS idx_payments_is_synced ON payments(is_synced)`,
-  );
-  await query(
-    `CREATE INDEX IF NOT EXISTS idx_payments_deleted ON payments(deleted)`,
-  );
+
   console.log("payments table created");
 }
 

@@ -1,5 +1,4 @@
-
-const { query } = require('../../../config/database');
+const { query } = require("../../../config/database");
 
 async function createAssignmentSubmissionsTable() {
   await query(`
@@ -12,16 +11,19 @@ async function createAssignmentSubmissionsTable() {
       feedback TEXT,
       reviewed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
       submitted_at TIMESTAMP DEFAULT NOW(),
-      reviewed_at TIMESTAMP,
-      is_synced INTEGER DEFAULT 1
+      updated_at TIMESTAMP DEFAULT NOW(),
+      reviewed_at TIMESTAMP
     )
   `);
 
-  await query(`CREATE INDEX IF NOT EXISTS idx_assignment_submissions_assignment_id ON assignment_submissions(assignment_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student_id ON assignment_submissions(student_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_assignment_submissions_is_synced ON assignment_submissions(is_synced)`);
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_assignment_submissions_assignment_id ON assignment_submissions(assignment_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student_id ON assignment_submissions(student_id)`,
+  );
 
-  console.log('assignment_submissions table created');
+  console.log("assignment_submissions table created");
 }
 
 module.exports = createAssignmentSubmissionsTable;

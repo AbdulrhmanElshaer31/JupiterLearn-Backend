@@ -44,16 +44,16 @@ const updateOnlineExam = async (examId, title, description, gradeId, groupId, du
   if (!existing.rows[0]) return null;
   
   const updated = {
-    title: title ?? existing.rows[0].title,
-    description: description ?? existing.rows[0].description,
-    grade_id: gradeId ?? existing.rows[0].grade_id,
-    group_id: groupId ?? existing.rows[0].group_id,
-    duration_minutes: durationMinutes ?? existing.rows[0].duration_minutes,
-    start_at: startAt ?? existing.rows[0].start_at,
-    end_at: endAt ?? existing.rows[0].end_at,
-    full_mark: fullMark ?? existing.rows[0].full_mark,
-    randomize_questions: randomizeQuestions ?? existing.rows[0].randomize_questions
-  };
+  title: title ?? existing.rows[0].title,
+  description: description ?? existing.rows[0].description,
+  grade_id: grade_id ?? existing.rows[0].grade_id,  
+  group_id: group_id ?? existing.rows[0].group_id,  
+  duration_minutes: durationMinutes ?? existing.rows[0].duration_minutes,
+  start_at: startAt ?? existing.rows[0].start_at,
+  end_at: endAt ?? existing.rows[0].end_at,
+  full_mark: fullMark ?? existing.rows[0].full_mark,
+  randomize_questions: randomizeQuestions ?? existing.rows[0].randomize_questions
+};
   
   const result = await query(onlineExamQueries.updateOnlineExam, [
     examId, updated.title, updated.description, updated.grade_id, updated.group_id,

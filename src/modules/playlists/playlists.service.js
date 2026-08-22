@@ -36,12 +36,12 @@ const updatePlaylist = async (playlistId, title, description, gradeId, isActive)
   const existing = await query("SELECT * FROM playlists WHERE id = $1", [playlistId]);
   if (!existing.rows[0]) return null;
   
-  const updated = {
-    title: title ?? existing.rows[0].title,
-    description: description ?? existing.rows[0].description,
-    grade_id: gradeId ?? existing.rows[0].grade_id,
-    is_active: isActive ?? existing.rows[0].is_active
-  };
+ const updated = {
+  title: title ?? existing.rows[0].title,
+  description: description ?? existing.rows[0].description,
+  grade_id: grade_id ?? existing.rows[0].grade_id,  // ✅
+  is_active: isActive ?? existing.rows[0].is_active
+};
   
   const result = await query(playlistQueries.updatePlaylist, [playlistId, updated.title, updated.description, updated.grade_id, updated.is_active]);
   return result.rows[0];

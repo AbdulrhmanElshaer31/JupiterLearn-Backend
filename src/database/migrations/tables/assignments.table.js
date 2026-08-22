@@ -1,5 +1,4 @@
-
-const { query } = require('../../../config/database');
+const { query } = require("../../../config/database");
 
 async function createAssignmentsTable() {
   await query(`
@@ -13,19 +12,30 @@ async function createAssignmentsTable() {
       full_mark DECIMAL(10,2) NOT NULL,
       deadline TIMESTAMP NOT NULL,
       is_closed INTEGER DEFAULT 0,
-      created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1
+      deleted INTEGER DEFAULT 0
     )
   `);
 
-  await query(`CREATE INDEX IF NOT EXISTS idx_assignments_grade_id ON assignments(grade_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_assignments_group_id ON assignments(group_id)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_assignments_created_by ON assignments(created_by)`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_assignments_is_synced ON assignments(is_synced)`);
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_assignments_grade_id ON assignments(grade_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_assignments_group_id ON assignments(group_id)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_assignments_created_by ON assignments(created_by)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_assignments_deadline ON assignments(deadline)`,
+  );
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_assignments_deleted ON assignments(deleted)`,
+  );
 
-  console.log('assignments table created');
+  console.log("assignments table created");
 }
 
 module.exports = createAssignmentsTable;

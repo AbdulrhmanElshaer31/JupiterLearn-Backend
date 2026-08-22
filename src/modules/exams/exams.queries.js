@@ -12,8 +12,7 @@ SELECT
   e.created_at
 FROM exams e
 LEFT JOIN grades g ON e.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON e.group_id = gr.id AND gr.deleted = 0
-WHERE e.deleted = 0
+LEFT JOIN groups gr ON e.group_id = gr.id 
 ORDER BY e.exam_date DESC
 `;
 
@@ -31,7 +30,7 @@ SELECT
   e.created_at
 FROM exams e
 LEFT JOIN grades g ON e.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON e.group_id = gr.id AND gr.deleted = 0
+LEFT JOIN groups gr ON e.group_id = gr.id 
 WHERE e.id = $1 AND e.deleted = 0
 `;
 
@@ -49,7 +48,7 @@ SELECT
   e.created_at
 FROM exams e
 LEFT JOIN grades g ON e.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON e.group_id = gr.id AND gr.deleted = 0
+LEFT JOIN groups gr ON e.group_id = gr.id 
 WHERE e.grade_id = $1 AND e.deleted = 0
 ORDER BY e.exam_date DESC
 `;
@@ -68,7 +67,7 @@ SELECT
   e.created_at
 FROM exams e
 LEFT JOIN grades g ON e.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON e.group_id = gr.id AND gr.deleted = 0
+LEFT JOIN groups gr ON e.group_id = gr.id
 WHERE e.group_id = $1 AND e.deleted = 0
 ORDER BY e.exam_date DESC
 `;

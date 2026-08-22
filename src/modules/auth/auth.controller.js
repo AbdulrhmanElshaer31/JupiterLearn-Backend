@@ -9,7 +9,7 @@ const StudentLogin = async (req, res, next) => {
   try {
     const student = await authService.studentAuth(req.body);
     if (student == null) {
-      throw new Error("Login Failed Check Credintals!");
+      throw new Error("Login Failed Check Credentials!");
     }
     const payload = {
       id: student.id,
@@ -54,7 +54,36 @@ const userLogin = async (req, res, next) => {
     next(error);
   }
 };
-const parentAccess = async (req, res, next) => {};
+const parentAccess = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      throw new Error("Token is required!");
+    }
+    const student = await authService.parentAccess(token);
+    if (!student) {
+      throw new Error("Invalid or expired token!");
+    }
+    const payload = {
+      id: student.id,
+      barcode: student.barcode,
+      role: ROLES.PARENT, 
+    };
+    const newToken = creatToken(payload);
+    res.status(200).json({
+      success: true,
+      token: newToken,
+      student: {
+        ...payload,
+        full_name: student.full_name,
+        phone: student.phone,
+        grade_id: student.grade_id,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   StudentLogin,
   userLogin,

@@ -13,7 +13,7 @@ SELECT
   s.active
 FROM students s
 LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
+LEFT JOIN groups gr ON s.group_id = gr.id 
 WHERE s.parent_token = $1 AND s.deleted = 0 AND s.active = 1
 `;
 
@@ -128,6 +128,7 @@ SELECT
 FROM assignments a
 LEFT JOIN assignment_submissions asub ON a.id = asub.assignment_id AND asub.student_id = $1
 WHERE a.grade_id = (SELECT grade_id FROM students WHERE id = $1 AND deleted = 0)
+ AND a.deleted = 0
 ORDER BY a.deadline DESC
 `;
 
@@ -143,7 +144,6 @@ SELECT
 FROM groups gr
 JOIN students s ON gr.id = s.group_id AND s.deleted = 0 AND s.active = 1
 WHERE gr.id = (SELECT group_id FROM students WHERE id = $1 AND deleted = 0)
-  AND gr.deleted = 0
 GROUP BY gr.id, gr.name, gr.day, gr.days, gr.start_time, gr.end_time, gr.room
 `;
 

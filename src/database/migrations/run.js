@@ -1,4 +1,3 @@
-// Desktop tables
 const createGradesTable = require("./tables/grades.table");
 const createGroupsTable = require("./tables/groups.table");
 const createStudentsTable = require("./tables/students.table");
@@ -9,11 +8,8 @@ const createAttendanceTable = require("./tables/attendance.table");
 const createExamsTable = require("./tables/exams.table");
 const createExamResultsTable = require("./tables/exam_results.table");
 const createMessagesTable = require("./tables/messages.table");
-const createMessageTemplatesTable = require("./tables/message_templates.table");
+const createWhatsappMessagesTable = require("./tables/whatsapp.table");
 const createSettingsTable = require("./tables/settings.table");
-const createDeletedRecordsTable = require("./tables/deleted_records.table"); // ✅ جديد
-
-// Platform tables
 const createVideosTable = require("./tables/videos.table");
 const createPlaylistsTable = require("./tables/playlists.table");
 const createPlaylistVideosTable = require("./tables/playlist_videos.table");
@@ -26,7 +22,6 @@ const createAssignmentsTable = require("./tables/assignments.table");
 const createAssignmentSubmissionsTable = require("./tables/assignment_submissions.table");
 
 async function runMigrations() {
-  // Desktop tables
   await createGradesTable();
   await createGroupsTable();
   await createStudentsTable();
@@ -37,11 +32,8 @@ async function runMigrations() {
   await createExamsTable();
   await createExamResultsTable();
   await createMessagesTable();
-  await createMessageTemplatesTable();
+  await createWhatsappMessagesTable();
   await createSettingsTable();
-  await createDeletedRecordsTable(); // ✅ جديد
-
-  // Platform tables
   await createVideosTable();
   await createPlaylistsTable();
   await createPlaylistVideosTable();
@@ -53,7 +45,7 @@ async function runMigrations() {
   await createAssignmentsTable();
   await createAssignmentSubmissionsTable();
 
-  console.log("All 23 tables created successfully"); // ✅ تحديث العدد لـ 23
+  console.log("All 22 tables created successfully");
   process.exit(0);
 }
 

@@ -14,10 +14,9 @@ SELECT
   oe.randomize_questions,
   oe.created_by,
   oe.created_at,
-  oe.updated_at
 FROM online_exams oe
 LEFT JOIN grades g ON oe.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON oe.group_id = gr.id AND gr.deleted = 0
+LEFT JOIN groups gr ON oe.group_id = gr.id 
 ORDER BY oe.created_at DESC
 `;
 
@@ -37,11 +36,9 @@ SELECT
   oe.randomize_questions,
   oe.created_by,
   oe.created_at,
-  oe.updated_at
 FROM online_exams oe
 LEFT JOIN grades g ON oe.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON oe.group_id = gr.id AND gr.deleted = 0
-WHERE oe.id = $1
+LEFT JOIN groups gr ON oe.group_id = gr.id
 `;
 
 const getOnlineExamsByGradeId = `
@@ -60,10 +57,9 @@ SELECT
   oe.randomize_questions,
   oe.created_by,
   oe.created_at,
-  oe.updated_at
 FROM online_exams oe
 LEFT JOIN grades g ON oe.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON oe.group_id = gr.id AND gr.deleted = 0
+LEFT JOIN groups gr ON oe.group_id = gr.id
 WHERE oe.grade_id = $1
 ORDER BY oe.created_at DESC
 `;
@@ -84,10 +80,9 @@ SELECT
   oe.randomize_questions,
   oe.created_by,
   oe.created_at,
-  oe.updated_at
 FROM online_exams oe
 LEFT JOIN grades g ON oe.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON oe.group_id = gr.id AND gr.deleted = 0
+LEFT JOIN groups gr ON oe.group_id = gr.id 
 WHERE oe.group_id = $1
 ORDER BY oe.created_at DESC
 `;
@@ -101,7 +96,7 @@ SELECT
   oe.end_at,
   COUNT(q.id) AS questions_count,
   COUNT(DISTINCT se.id) AS students_attempted,
-  COUNT(DISTINCT se.student_id) AS total_students,
+  (SELECT COUNT(*) FROM students WHERE grade_id = oe.grade_id AND deleted = 0 AND active = 1) AS total_students,
   ROUND(AVG(se.score)::numeric, 2) AS average_score,
   MAX(se.score) AS highest_score,
   MIN(se.score) AS lowest_score,
@@ -152,9 +147,7 @@ RETURNING *
 `;
 
 const deleteOnlineExam = `
-DELETE FROM online_exams
-WHERE id = $1
-RETURNING id
+UPDATE online_exams SET deleted = 1 WHERE id = $1 RETURNING id
 `;
 
 module.exports = {

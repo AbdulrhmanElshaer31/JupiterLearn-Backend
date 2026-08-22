@@ -68,8 +68,14 @@ const getInactiveVideos = async (req, res, next) => {
 
 const createVideo = async (req, res, next) => {
   try {
-    const { title, description, gradeId, youtubeUrl } = req.body;
-    const video = await videoService.createVideo(title, description, gradeId, youtubeUrl, req.userId);
+    const { title, description, grade_id, youtube_url } = req.body;
+    const video = await videoService.createVideo(
+      title, 
+      description, 
+      grade_id, 
+      youtube_url, 
+      req.clientId  
+    );
     return res.status(201).json({
       success: true,
       message: "Video Created!",
@@ -82,8 +88,15 @@ const createVideo = async (req, res, next) => {
 
 const updateVideo = async (req, res, next) => {
   try {
-    const { title, description, gradeId, youtubeUrl, isActive } = req.body;
-    const video = await videoService.updateVideo(req.params.videoId, title, description, gradeId, youtubeUrl, isActive);
+    const { title, description, grade_id, youtube_url, isActive } = req.body;
+    const video = await videoService.updateVideo(
+      req.params.videoId, 
+      title, 
+      description, 
+      grade_id, 
+      youtube_url, 
+      isActive
+    );
     if (!video) throw new Error("Video Not Found!");
     return res.status(200).json({
       success: true,

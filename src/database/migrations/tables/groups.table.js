@@ -6,26 +6,20 @@ async function createGroupsTable() {
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       grade_id INTEGER NOT NULL REFERENCES grades(id) ON DELETE CASCADE,
-      day TEXT,
       days TEXT,
-      start_time TEXT,
-      end_time TEXT,
+      start_time TIME,
+      end_time TIME,
       room TEXT,
-      lock_attendance_after_minutes INTEGER,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1,
       deleted INTEGER DEFAULT 0
-
     )
   `);
 
   await query(
     `CREATE INDEX IF NOT EXISTS idx_groups_grade_id ON groups(grade_id)`,
   );
-  await query(
-    `CREATE INDEX IF NOT EXISTS idx_groups_is_synced ON groups(is_synced)`,
-  );
+  await query(`CREATE INDEX IF NOT EXISTS idx_groups_name ON groups(name)`);
   await query(
     `CREATE INDEX IF NOT EXISTS idx_groups_deleted ON groups(deleted)`,
   );

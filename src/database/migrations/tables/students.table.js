@@ -6,20 +6,17 @@ async function createStudentsTable() {
       id SERIAL PRIMARY KEY,
       barcode TEXT UNIQUE NOT NULL,
       full_name TEXT NOT NULL,
-      phone TEXT,
-      parent_phone TEXT,
-      password TEXT,
-      parent_token TEXT,
+      phone TEXT DEFAULT NULL,
+      parent_phone TEXT DEFAULT NULL,
+      password TEXT DEFAULT NULL,
+      parent_token TEXT UNIQUE NOT NULL,
+      profile_image VARCHAR(255),
       grade_id INTEGER NOT NULL REFERENCES grades(id) ON DELETE CASCADE,
       group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
-      platform_account_active INTEGER DEFAULT 0,
       notes TEXT,
-      active INTEGER DEFAULT 1,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1,
       deleted INTEGER DEFAULT 0
-
     )
   `);
 
@@ -37,9 +34,6 @@ async function createStudentsTable() {
   );
   await query(
     `CREATE INDEX IF NOT EXISTS idx_students_barcode ON students(barcode)`,
-  );
-  await query(
-    `CREATE INDEX IF NOT EXISTS idx_students_is_synced ON students(is_synced)`,
   );
   await query(
     `CREATE INDEX IF NOT EXISTS idx_students_parent_token ON students(parent_token)`,

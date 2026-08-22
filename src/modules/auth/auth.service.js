@@ -6,7 +6,8 @@ const studentAuth = async (credentials) => {
     WHERE (phone = $1 OR parent_phone = $1)
     AND password = $2
     AND platform_account_active = 1
-    AND active = 1;`;
+    AND active = 1;
+    AND deleted = 0;`;
   const result = await query(qr, [phone, password]);
   return result.rows[0] || null;
 };
@@ -20,7 +21,7 @@ const userAuth = async (credentials) => {
               FROM
                 users
             WHERE
-                 phone = $1 AND password = $2 AND is_active = 1;`;
+                 phone = $1 AND password = $2 AND is_active = 1 AND deleted = 0;;`;
   const result = await query(qr, [phone, password]);
   return result.rows[0] || null;
 };
@@ -28,8 +29,14 @@ const userAuth = async (credentials) => {
 
 
 const parentAccess = async (token) => {
-    const qr =`SELECT `
- };
+  const qr = `SELECT id, barcode, full_name, phone, grade_id 
+              FROM students 
+              WHERE parent_token = $1 
+              AND active = 1 
+              AND deleted = 0`;
+  const result = await query(qr, [token]);
+  return result.rows[0] || null;
+};
 
 
 

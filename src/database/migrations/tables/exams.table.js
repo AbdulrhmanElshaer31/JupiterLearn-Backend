@@ -10,11 +10,10 @@ async function createExamsTable() {
       total_degree DECIMAL(10,2) NOT NULL,
       exam_date DATE NOT NULL,
       notes TEXT,
+      created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1,
       deleted INTEGER DEFAULT 0
-
     )
   `);
 
@@ -26,9 +25,10 @@ async function createExamsTable() {
   );
   await query(`CREATE INDEX IF NOT EXISTS idx_exams_date ON exams(exam_date)`);
   await query(
-    `CREATE INDEX IF NOT EXISTS idx_exams_is_synced ON exams(is_synced)`,
+    `CREATE INDEX IF NOT EXISTS idx_exams_created_by ON exams(created_by)`,
   );
   await query(`CREATE INDEX IF NOT EXISTS idx_exams_deleted ON exams(deleted)`);
+
   console.log("exams table created");
 }
 

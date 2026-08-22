@@ -5,16 +5,12 @@ async function createSubscriptionsTable() {
     CREATE TABLE IF NOT EXISTS subscriptions (
       id SERIAL PRIMARY KEY,
       student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-      grade_id INTEGER NOT NULL REFERENCES grades(id) ON DELETE CASCADE,
-      month DATE NOT NULL,
+      month VARCHAR(7) NOT NULL,
       required_amount DECIMAL(10,2) NOT NULL,
-      status TEXT DEFAULT 'unpaid',
+      status TEXT DEFAULT 'unpaid' CHECK (status IN ('paid', 'unpaid')),
       created_at TIMESTAMP DEFAULT NOW(),
-      updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1,
       deleted INTEGER DEFAULT 0,
       UNIQUE(student_id, month)
-
     )
   `);
 
@@ -26,9 +22,6 @@ async function createSubscriptionsTable() {
   );
   await query(
     `CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status)`,
-  );
-  await query(
-    `CREATE INDEX IF NOT EXISTS idx_subscriptions_is_synced ON subscriptions(is_synced)`,
   );
   await query(
     `CREATE INDEX IF NOT EXISTS idx_subscriptions_deleted ON subscriptions(deleted)`,

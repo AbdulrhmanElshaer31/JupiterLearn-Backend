@@ -9,7 +9,6 @@ SELECT
   v.is_active,
   v.created_by,
   v.created_at,
-  v.updated_at
 FROM videos v
 LEFT JOIN grades g ON v.grade_id = g.id AND g.deleted = 0
 ORDER BY v.created_at DESC
@@ -26,7 +25,6 @@ SELECT
   v.is_active,
   v.created_by,
   v.created_at,
-  v.updated_at
 FROM videos v
 LEFT JOIN grades g ON v.grade_id = g.id AND g.deleted = 0
 WHERE v.id = $1
@@ -43,7 +41,6 @@ SELECT
   v.is_active,
   v.created_by,
   v.created_at,
-  v.updated_at
 FROM videos v
 LEFT JOIN grades g ON v.grade_id = g.id AND g.deleted = 0
 WHERE v.grade_id = $1
@@ -61,7 +58,6 @@ SELECT
   v.is_active,
   v.created_by,
   v.created_at,
-  v.updated_at
 FROM videos v
 LEFT JOIN grades g ON v.grade_id = g.id AND g.deleted = 0
 WHERE v.is_active = 1
@@ -79,7 +75,6 @@ SELECT
   v.is_active,
   v.created_by,
   v.created_at,
-  v.updated_at
 FROM videos v
 LEFT JOIN grades g ON v.grade_id = g.id AND g.deleted = 0
 WHERE v.is_active = 0
@@ -100,15 +95,12 @@ SET
   grade_id = $4,
   youtube_url = $5,
   is_active = $6,
-  updated_at = NOW()
-WHERE id = $1
+  WHERE id = $1
 RETURNING *
 `;
 
 const deleteVideo = `
-DELETE FROM videos
-WHERE id = $1
-RETURNING id
+UPDATE videos SET deleted = 1 WHERE id = $1 RETURNING id
 `;
 
 module.exports = {

@@ -1,66 +1,35 @@
 const gradeService = require("./grades.service");
 
-const getAllGrades = async (req, res, next) => {
+const getGradesWithStudentsCount = async (req, res, next) => {
   try {
-    const grades = await gradeService.getAllGrades();
+    const gradeStats = await gradeService.getGradesWithStudentsCount();
+
+    if (!gradeStats) {
+      throw new Error("فشل تحميل الصفوف حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
-      data: grades,
+      message: "تم تحميل الصفوف بنجاح!",
+      data: gradeStats,
     });
   } catch (error) {
     next(error);
   }
 };
 
-const getGradeById = async (req, res, next) => {
+const getGradesWithGroupsCount = async (req, res, next) => {
   try {
-    const grade = await gradeService.getGradeById(req.params.gradeId);
-    if (!grade) throw new Error("Grade Not Found!");
-    return res.status(200).json({
-      success: true,
-      message: "Data Loaded!",
-      data: grade,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    const gradeStats = await gradeService.getGradesWithGroupsCount();
 
-const getActiveGrades = async (req, res, next) => {
-  try {
-    const grades = await gradeService.getActiveGrades();
-    return res.status(200).json({
-      success: true,
-      message: "Data Loaded!",
-      data: grades,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    if (!gradeStats) {
+      throw new Error("فشل تحميل الصفوف حاول مرة أخرى!");
+    }
 
-const getInactiveGrades = async (req, res, next) => {
-  try {
-    const grades = await gradeService.getInactiveGrades();
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
-      data: grades,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getGradeStats = async (req, res, next) => {
-  try {
-    const stats = await gradeService.getGradeStats(req.params.gradeId);
-    if (!stats) throw new Error("Grade Not Found!");
-    return res.status(200).json({
-      success: true,
-      message: "Data Loaded!",
-      data: stats,
+      message: "تم تحميل الصفوف بنجاح!",
+      data: gradeStats,
     });
   } catch (error) {
     next(error);
@@ -69,11 +38,175 @@ const getGradeStats = async (req, res, next) => {
 
 const getAllGradesStats = async (req, res, next) => {
   try {
-    const stats = await gradeService.getAllGradesStats();
+    const gradesStats = await gradeService.getAllGradesStats();
+
+    if (!gradesStats) {
+      throw new Error("فشل تحميل إحصائيات الصفوف حاول مرة أخرى!");
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Data Loaded!",
-      data: stats,
+      message: "تم تحميل إحصائيات الصفوف بنجاح!",
+      data: gradesStats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getGradeStats = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const gradeStats = await gradeService.getGradeStats(id);
+
+    if (!gradeStats) {
+      throw new Error("فشل تحميل إحصائيات الصف حاول مرة أخرى!");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم تحميل إحصائيات الصف بنجاح!",
+      data: gradeStats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const hardDeleteGrade = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const grade = await gradeService.hardDeleteGrade(id);
+
+    if (!grade) {
+      throw new Error("فشل حذف الصف نهائيًا حاول مرة أخرى!");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم حذف الصف نهائيًا بنجاح!",
+      data: grade,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const softDeleteGrade = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const grade = await gradeService.softDeleteGrade(id);
+
+    if (!grade) {
+      throw new Error("فشل حذف الصف حاول مرة أخرى!");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم حذف الصف بنجاح!",
+      data: grade,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateGrade = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, monthlyPrice } = req.body;
+
+    const grade = await gradeService.updateGrade(id, name, monthlyPrice);
+
+    if (!grade) {
+      throw new Error("فشل تعديل الصف حاول مرة أخرى!");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم تعديل الصف بنجاح!",
+      data: grade,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const findGradeByName = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+
+    const grade = await gradeService.findGradeByName(name);
+
+    if (!grade) {
+      throw new Error("فشل تحميل الصف حاول مرة أخرى!");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم تحميل الصف بنجاح!",
+      data: grade,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getGradeById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const grade = await gradeService.getGradeById(id);
+
+    if (!grade) {
+      throw new Error("فشل تحميل الصف حاول مرة أخرى!");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم تحميل الصف بنجاح!",
+      data: grade,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAllGrades = async (req, res, next) => {
+  try {
+    const grades = await gradeService.getAllGrades();
+
+    if (!grades) {
+      throw new Error("فشل تحميل الصفوف حاول مرة أخرى!");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم تحميل الصفوف بنجاح!",
+      data: grades,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createGrade = async (req, res, next) => {
+  try {
+    const { name, monthlyPrice } = req.body;
+
+    const grade = await gradeService.createGrade(name, monthlyPrice);
+
+    if (!grade) {
+      throw new Error("فشل إنشاء الصف حاول مرة أخرى!");
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "تم إنشاء الصف بنجاح!",
+      data: grade,
     });
   } catch (error) {
     next(error);
@@ -81,10 +214,15 @@ const getAllGradesStats = async (req, res, next) => {
 };
 
 module.exports = {
+  createGrade,
   getAllGrades,
   getGradeById,
-  getActiveGrades,
-  getInactiveGrades,
+  findGradeByName,
+  updateGrade,
+  softDeleteGrade,
+  hardDeleteGrade,
   getGradeStats,
-  getAllGradesStats
+  getAllGradesStats,
+  getGradesWithGroupsCount,
+  getGradesWithStudentsCount,
 };

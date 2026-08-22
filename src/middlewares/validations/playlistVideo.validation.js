@@ -1,8 +1,8 @@
 const Joi = require("joi");
 
 const addVideoToPlaylistSchema = Joi.object({
-  playlistId: Joi.number().integer().required(),
-  videoId: Joi.number().integer().required()
+  playlist_id: Joi.number().integer().required(),
+  video_id: Joi.number().integer().required()
 });
 
 module.exports = {

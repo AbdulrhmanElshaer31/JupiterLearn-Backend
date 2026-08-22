@@ -1,5 +1,5 @@
 const getClient = require("../utils/getClient");
-const getCleintAuth = (req, res, next) => {
+const getClientAuth = (req, res, next) => {
   const clientAuth = req.headers["x-client-key"];
   const client = getClient(clientAuth);
   if (!client) {
@@ -12,4 +12,4 @@ const getCleintAuth = (req, res, next) => {
   req.clientRole = client.role;
   next();
 };
-module.exports = getCleintAuth;
+module.exports = getClientAuth;

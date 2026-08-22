@@ -22,7 +22,7 @@ const updateOption = async (optionId, optionText, isCorrect, order) => {
   if (!existing.rows[0]) return null;
   
   const updated = {
-    option_text: optionText ?? existing.rows[0].option_text,
+    option_text: option_text  ?? existing.rows[0].option_text,
     is_correct: isCorrect ?? existing.rows[0].is_correct,
     order: order ?? existing.rows[0].order
   };

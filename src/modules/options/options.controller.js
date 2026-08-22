@@ -31,7 +31,7 @@ const getOptionById = async (req, res, next) => {
 
 const createOption = async (req, res, next) => {
   try {
-    const { questionId, optionText, isCorrect, order } = req.body;
+    const { question_id, option_text, isCorrect, order } = req.body;
     const option = await optionService.createOption(
       questionId,
       optionText,
@@ -50,10 +50,10 @@ const createOption = async (req, res, next) => {
 
 const updateOption = async (req, res, next) => {
   try {
-    const { optionText, isCorrect, order } = req.body;
+    const { option_text, isCorrect, order } = req.body;
     const option = await optionService.updateOption(
       req.params.optionId,
-      optionText,
+      option_text,
       isCorrect,
       order,
     );

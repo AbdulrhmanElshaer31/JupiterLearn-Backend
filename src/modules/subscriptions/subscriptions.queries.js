@@ -28,7 +28,7 @@ SELECT
   sub.required_amount - COALESCE(SUM(p.amount), 0) AS remaining_amount
 FROM subscriptions sub
 JOIN students s ON sub.student_id = s.id AND s.deleted = 0
-LEFT JOIN grades g ON s.grade_id = g.id
+LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
 LEFT JOIN groups gr ON s.group_id = gr.id
 LEFT JOIN payments p ON sub.id = p.subscription_id AND p.deleted = 0
 WHERE TO_CHAR(sub.month, 'YYYY-MM') = $1 AND sub.deleted = 0
@@ -45,7 +45,7 @@ SELECT
   g.name AS grade_name,
   gr.name AS group_name
 FROM students s
-LEFT JOIN grades g ON s.grade_id = g.id
+LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
 LEFT JOIN groups gr ON s.group_id = gr.id
 WHERE s.deleted = 0 
   AND s.active = 1
@@ -97,7 +97,7 @@ LEFT JOIN subscriptions sub ON s.id = sub.student_id
   AND EXTRACT(YEAR FROM sub.month) = EXTRACT(YEAR FROM CURRENT_DATE)
   AND sub.deleted = 0
 LEFT JOIN payments p ON sub.id = p.subscription_id AND p.deleted = 0
-WHERE gr.id = $1 AND gr.deleted = 0
+WHERE gr.id = $1
 GROUP BY gr.id, gr.name, g.name
 `;
 

@@ -1,5 +1,5 @@
 const assignmentService = require("./assignments.service");
-
+const path = require("path");
 const getAllAssignments = async (req, res, next) => {
   try {
     const assignments = await assignmentService.getAllAssignments();
@@ -61,25 +61,24 @@ const getAssignmentsByGroupId = async (req, res, next) => {
 
 const createAssignment = async (req, res, next) => {
   try {
-    const {
-      title,
-      description,
-      gradeId,
-      groupId,
-      filePath,
-      fullMark,
-      deadline,
-    } = req.body;
+    console.log(req.body);
+
+    const { title, description, grade_id, group_id, full_mark, deadline } =
+      req.body;
+
+    const file_path = req.file.path;
+
     const assignment = await assignmentService.createAssignment(
       title,
       description,
-      gradeId,
-      groupId,
-      filePath,
-      fullMark,
+      grade_id,
+      group_id,
+      file_path,
+      full_mark,
       deadline,
       req.clientId,
     );
+
     return res.status(201).json({
       success: true,
       message: "Assignment Created!",
@@ -89,28 +88,29 @@ const createAssignment = async (req, res, next) => {
     next(error);
   }
 };
+
 const updateAssignment = async (req, res, next) => {
   try {
     const {
       title,
       description,
-      gradeId,
-      groupId,
-      filePath,
-      fullMark,
+      grade_id,
+      group_id,
+      file_path,
+      full_mark,
       deadline,
-      isClosed,
+      is_closed,
     } = req.body;
     const assignment = await assignmentService.updateAssignment(
       req.params.assignmentId,
       title,
       description,
-      gradeId,
-      groupId,
-      filePath,
-      fullMark,
+      grade_id,
+      group_id,
+      file_path,
+      full_mark,
       deadline,
-      isClosed,
+      is_closed,
     );
     if (!assignment) throw new Error("Assignment Not Found!");
     return res.status(200).json({
@@ -118,6 +118,24 @@ const updateAssignment = async (req, res, next) => {
       message: "Assignment Updated!",
       data: assignment,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const downloadAssignment = async (req, res, next) => {
+  try {
+    const { assignmentId } = req.params;
+
+    const assignment = await assignmentService.getAssignmentById(assignmentId);
+
+    if (!assignment) {
+      throw new Error("الملف غير موجود");
+    }
+
+    const filePath = path.join(__dirname, "../../../", assignment.file_path);
+
+    return res.download(filePath);
   } catch (error) {
     next(error);
   }
@@ -147,4 +165,5 @@ module.exports = {
   createAssignment,
   updateAssignment,
   deleteAssignment,
+  downloadAssignment,
 };

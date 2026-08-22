@@ -83,8 +83,10 @@ const getGradeOnlineExamStats = async (req, res, next) => {
 
 const createOnlineExam = async (req, res, next) => {
   try {
-    const { title, description, gradeId, groupId, durationMinutes, startAt, endAt, fullMark, randomizeQuestions } = req.body;
-    const exam = await onlineExamService.createOnlineExam(title, description, gradeId, groupId, durationMinutes, startAt, endAt, fullMark, randomizeQuestions, req.userId);
+    const { title, description, grade_id, group_id, durationMinutes, startAt, endAt, fullMark, randomizeQuestions } = req.body;
+    const exam = await onlineExamService.createOnlineExam(
+      title, description, grade_id, group_id, durationMinutes, startAt, endAt, fullMark, randomizeQuestions, req.clientId
+    );
     return res.status(201).json({
       success: true,
       message: "Exam Created!",
@@ -97,8 +99,10 @@ const createOnlineExam = async (req, res, next) => {
 
 const updateOnlineExam = async (req, res, next) => {
   try {
-    const { title, description, gradeId, groupId, durationMinutes, startAt, endAt, fullMark, randomizeQuestions } = req.body;
-    const exam = await onlineExamService.updateOnlineExam(req.params.examId, title, description, gradeId, groupId, durationMinutes, startAt, endAt, fullMark, randomizeQuestions);
+    const { title, description, grade_id, group_id, durationMinutes, startAt, endAt, fullMark, randomizeQuestions } = req.body;
+    const exam = await onlineExamService.updateOnlineExam(
+      req.params.examId, title, description, grade_id, group_id, durationMinutes, startAt, endAt, fullMark, randomizeQuestions
+    );
     if (!exam) throw new Error("Exam Not Found!");
     return res.status(200).json({
       success: true,

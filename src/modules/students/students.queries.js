@@ -1,378 +1,13 @@
-const getStudentProfile = `
-SELECT 
-  s.id,
-  s.barcode,
-  s.full_name,
-  s.phone,
-  s.parent_phone,
-  s.platform_account_active,
-  s.active,
-  s.notes,
-  s.grade_id,
-  s.group_id,
-  g.name AS grade_name,
-  g.monthly_price,
-  g.platform_enabled,
-  g.whatsapp_group_link,
-  gr.name AS group_name,
-  gr.day,
-  gr.days,
-  gr.start_time,
-  gr.end_time,
-  gr.room
-FROM students s
-LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
-WHERE s.id = $1 AND s.deleted = 0
+// PART 1: CRUD & SEARCH OPERATIONS
+
+// Create a new student
+const createStudent = `
+INSERT INTO students (barcode, full_name, phone, parent_phone, parent_token, grade_id, group_id, notes)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING *
 `;
 
-const getStudentQuickStats = `
-SELECT 
-  COUNT(a.id) AS total_attendance_days,
-  COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS present_days,
-  COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absent_days,
-  COUNT(CASE WHEN a.status = 'late' THEN 1 END) AS late_days,
-  ROUND(
-    (COUNT(CASE WHEN a.status = 'present' THEN 1 END)::numeric / 
-    NULLIF(COUNT(a.id), 0)) * 100, 2
-  ) AS attendance_percentage,
-  (
-    SELECT ROUND(AVG(er.degree)::numeric, 2)
-    FROM exam_results er
-    JOIN exams e ON er.exam_id = e.id
-    WHERE er.student_id = $1 AND er.deleted = 0 AND e.deleted = 0
-  ) AS avg_exam_degree,
-  (
-    SELECT COUNT(*)
-    FROM student_exams se
-    WHERE se.student_id = $1 AND se.submitted_at IS NOT NULL
-  ) AS total_online_exams,
-  (
-    SELECT COALESCE(SUM(p.amount), 0)
-    FROM payments p
-    WHERE p.student_id = $1 AND p.deleted = 0
-  ) AS total_paid,
-  (
-    SELECT COALESCE(SUM(sub.required_amount), 0)
-    FROM subscriptions sub
-    WHERE sub.student_id = $1 AND sub.deleted = 0
-  ) AS total_fees
-FROM attendance a
-WHERE a.student_id = $1 AND a.deleted = 0
-`;
-
-const getAttendanceHistory = `
-SELECT 
-  a.id,
-  a.attendance_date,
-  a.status,
-  a.attendance_time,
-  a.method,
-  a.is_makeup,
-  a.notes,
-  gr.name AS group_name
-FROM attendance a
-LEFT JOIN groups gr ON a.group_id = gr.id
-WHERE a.student_id = $1 AND a.deleted = 0
-ORDER BY a.attendance_date DESC
-LIMIT $2 OFFSET $3
-`;
-
-const getMonthlyAttendanceStats = `
-SELECT 
-  TO_CHAR(a.attendance_date, 'YYYY-MM') AS month,
-  COUNT(a.id) AS total_days,
-  COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS present_days,
-  COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absent_days,
-  ROUND(
-    (COUNT(CASE WHEN a.status = 'present' THEN 1 END)::numeric / 
-    NULLIF(COUNT(a.id), 0)) * 100, 2
-  ) AS percentage
-FROM attendance a
-WHERE a.student_id = $1 AND a.deleted = 0
-GROUP BY TO_CHAR(a.attendance_date, 'YYYY-MM')
-ORDER BY month DESC
-`;
-
-const getConsecutiveAbsences = `
-WITH ranked_attendance AS (
-  SELECT 
-    a.attendance_date,
-    a.status,
-    SUM(CASE WHEN a.status != 'absent' THEN 1 ELSE 0 END) 
-      OVER (ORDER BY a.attendance_date DESC) AS group_id
-  FROM attendance a
-  WHERE a.student_id = $1 AND a.deleted = 0
-)
-SELECT COUNT(*) AS consecutive_absences
-FROM ranked_attendance
-WHERE status = 'absent' AND group_id = 0
-`;
-
-const getPaymentHistory = `
-SELECT 
-  p.id,
-  p.amount,
-  p.is_full_payment,
-  p.remaining_before,
-  p.remaining_after,
-  p.payment_date,
-  p.notes,
-  sub.month AS subscription_month,
-  sub.required_amount AS subscription_amount
-FROM payments p
-LEFT JOIN subscriptions sub ON p.subscription_id = sub.id
-WHERE p.student_id = $1 AND p.deleted = 0
-ORDER BY p.payment_date DESC
-LIMIT $2 OFFSET $3
-`;
-
-const getRemainingBalance = `
-SELECT 
-  COALESCE(SUM(sub.required_amount), 0) AS total_required,
-  COALESCE(SUM(p.amount), 0) AS total_paid,
-  COALESCE(SUM(sub.required_amount), 0) - COALESCE(SUM(p.amount), 0) AS remaining
-FROM subscriptions sub
-LEFT JOIN payments p ON sub.id = p.subscription_id AND p.student_id = $1 AND p.deleted = 0
-WHERE sub.student_id = $1 AND sub.deleted = 0
-`;
-
-const getCurrentSubscription = `
-SELECT 
-  sub.id,
-  sub.month,
-  sub.required_amount,
-  sub.status,
-  COALESCE(SUM(p.amount), 0) AS paid_amount,
-  sub.required_amount - COALESCE(SUM(p.amount), 0) AS remaining_amount,
-  CASE 
-    WHEN COALESCE(SUM(p.amount), 0) >= sub.required_amount THEN 'paid'
-    WHEN COALESCE(SUM(p.amount), 0) > 0 THEN 'partial'
-    ELSE 'unpaid'
-  END AS payment_status
-FROM subscriptions sub
-LEFT JOIN payments p ON sub.id = p.subscription_id AND p.deleted = 0
-WHERE sub.student_id = $1 
-  AND sub.deleted = 0
-  AND EXTRACT(MONTH FROM sub.month) = EXTRACT(MONTH FROM CURRENT_DATE)
-  AND EXTRACT(YEAR FROM sub.month) = EXTRACT(YEAR FROM CURRENT_DATE)
-GROUP BY sub.id, sub.month, sub.required_amount, sub.status
-`;
-
-const getStudentPaperExams = `
-SELECT 
-  e.id,
-  e.title,
-  e.total_degree,
-  e.exam_date,
-  e.notes,
-  er.degree AS student_degree,
-  CASE 
-    WHEN er.degree IS NOT NULL THEN ROUND((er.degree::numeric / NULLIF(e.total_degree::numeric, 0)) * 100, 2)
-    ELSE NULL
-  END AS percentage
-FROM exams e
-LEFT JOIN exam_results er ON e.id = er.exam_id AND er.student_id = $1 AND er.deleted = 0
-WHERE e.grade_id = (
-    SELECT grade_id FROM students WHERE id = $1 AND deleted = 0
-  )
-  AND e.deleted = 0
-ORDER BY e.exam_date DESC
-LIMIT $2 OFFSET $3
-`;
-
-const getStudentExamResults = `
-SELECT 
-  er.id,
-  er.degree,
-  er.notes,
-  e.title AS exam_title,
-  e.total_degree,
-  e.exam_date,
-  g.name AS grade_name
-FROM exam_results er
-JOIN exams e ON er.exam_id = e.id
-JOIN grades g ON e.grade_id = g.id
-WHERE er.student_id = $1 AND er.deleted = 0
-ORDER BY e.exam_date DESC
-`;
-
-const getAvailableOnlineExams = `
-SELECT 
-  oe.id,
-  oe.title,
-  oe.description,
-  oe.duration_minutes,
-  oe.full_mark,
-  oe.start_at,
-  oe.end_at,
-  oe.randomize_questions,
-  g.name AS grade_name,
-  gr.name AS group_name,
-  COUNT(q.id) AS questions_count,
-  CASE 
-    WHEN oe.start_at > NOW() THEN 'upcoming'
-    WHEN oe.end_at < NOW() THEN 'expired'
-    ELSE 'available'
-  END AS exam_status
-FROM online_exams oe
-JOIN grades g ON oe.grade_id = g.id AND g.deleted = 0
-LEFT JOIN groups gr ON oe.group_id = gr.id AND gr.deleted = 0
-LEFT JOIN questions q ON oe.id = q.exam_id
-LEFT JOIN student_exams se ON oe.id = se.exam_id AND se.student_id = $1 AND se.submitted_at IS NOT NULL
-WHERE oe.grade_id = (
-    SELECT grade_id FROM students WHERE id = $1 AND deleted = 0
-  )
-  AND oe.end_at > NOW() 
-  AND se.id IS NULL 
-  AND (
-    oe.group_id IS NULL 
-    OR oe.group_id = (
-      SELECT group_id FROM students WHERE id = $1 AND deleted = 0
-    ) 
-  )
-GROUP BY oe.id, g.name, gr.name
-ORDER BY 
-  CASE 
-    WHEN oe.start_at <= NOW() THEN 0 
-    ELSE 1 
-  END,
-  oe.start_at ASC
-LIMIT $2 OFFSET $3
-`;
-
-const getStudentOnlineExams = `
-SELECT 
-  se.id,
-  se.score,
-  se.total_questions,
-  se.correct_answers,
-  se.started_at,
-  se.submitted_at,
-  oe.title AS exam_title,
-  oe.full_mark,
-  ROUND((se.score::numeric / NULLIF(oe.full_mark::numeric, 0)) * 100, 2) AS percentage,
-  CASE 
-    WHEN se.score >= (oe.full_mark * 0.5) THEN 'passed'
-    ELSE 'failed'
-  END AS result_status
-FROM student_exams se
-JOIN online_exams oe ON se.exam_id = oe.id
-WHERE se.student_id = $1 AND se.submitted_at IS NOT NULL
-ORDER BY se.id DESC
-LIMIT $2 OFFSET $3
-`;
-
-const getStudentExamAnswers = `
-SELECT 
-  sa.id,
-  sa.is_correct,
-  sa.submitted_at,
-  q.question_text,
-  q.type AS question_type,
-  o.option_text AS selected_option_text,
-  correct_o.option_text AS correct_option_text
-FROM student_answers sa
-JOIN questions q ON sa.question_id = q.id
-LEFT JOIN options o ON sa.selected_option_id = o.id
-LEFT JOIN options correct_o ON q.id = correct_o.question_id AND correct_o.is_correct = 1
-WHERE sa.exam_id = $1 AND sa.student_id = $2
-ORDER BY q."order"
-`;
-
-const getStudentAssignments = `
-SELECT 
-  a.id,
-  a.title,
-  a.description,
-  a.file_path,
-  a.full_mark,
-  a.deadline,
-  a.is_closed,
-  g.name AS grade_name,
-  asub.id AS submission_id,
-  asub.submitted_at,
-  asub.score AS submission_score,
-  asub.feedback,
-  CASE 
-    WHEN asub.id IS NULL AND a.deadline < NOW() THEN 'overdue'
-    WHEN asub.id IS NULL THEN 'pending'
-    WHEN asub.score IS NOT NULL THEN 'graded'
-    ELSE 'submitted'
-  END AS assignment_status
-FROM assignments a
-JOIN grades g ON a.grade_id = g.id
-LEFT JOIN assignment_submissions asub ON a.id = asub.assignment_id AND asub.student_id = $1
-WHERE a.grade_id = (
-    SELECT grade_id FROM students WHERE id = $1 AND deleted = 0
-  )
-ORDER BY a.deadline DESC
-LIMIT $2 OFFSET $3
-`;
-
-const getStudentSubmissions = `
-SELECT 
-  asub.id,
-  asub.file_path,
-  asub.score,
-  asub.feedback,
-  asub.submitted_at,
-  asub.reviewed_at,
-  a.title AS assignment_title,
-  a.full_mark,
-  a.deadline,
-  g.name AS grade_name,
-  CASE 
-    WHEN asub.submitted_at > a.deadline THEN 'late'
-    ELSE 'on_time'
-  END AS submission_timing
-FROM assignment_submissions asub
-JOIN assignments a ON asub.assignment_id = a.id
-JOIN grades g ON a.grade_id = g.id
-WHERE asub.student_id = $1
-ORDER BY asub.submitted_at DESC
-LIMIT $2 OFFSET $3
-`;
-
-const getStudentPlaylists = `
-SELECT 
-  p.id,
-  p.title,
-  p.description,
-  p.is_active,
-  g.name AS grade_name,
-  COUNT(pv.video_id) AS videos_count,
-  (
-    SELECT v.youtube_url 
-    FROM playlist_videos pv2
-    JOIN videos v ON pv2.video_id = v.id
-    WHERE pv2.playlist_id = p.id
-    ORDER BY pv2.added_at ASC
-    LIMIT 1
-  ) AS thumbnail_url
-FROM playlists p
-JOIN grades g ON p.grade_id = g.id
-LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
-WHERE p.grade_id = (
-    SELECT grade_id FROM students WHERE id = $1 AND deleted = 0
-  )
-  AND p.is_active = 1
-GROUP BY p.id, p.title, p.description, p.is_active, g.name
-`;
-
-const getPlaylistVideos = `
-SELECT 
-  v.id,
-  v.title,
-  v.description,
-  v.youtube_url,
-  v.is_active
-FROM videos v
-JOIN playlist_videos pv ON v.id = pv.video_id
-WHERE pv.playlist_id = $1
-  AND v.is_active = 1
-`;
-
+// Get all students with filters (search, grade, group) - 20 per page
 const getAllStudents = `
 SELECT 
   s.id,
@@ -380,33 +15,11 @@ SELECT
   s.full_name,
   s.phone,
   s.parent_phone,
-  s.platform_account_active,
-  s.active,
+  s.profile_image,
   s.grade_id,
   g.name AS grade_name,
   s.group_id,
-  gr.name AS group_name,
-  (
-    SELECT a.status
-    FROM attendance a
-    WHERE a.student_id = s.id AND a.deleted = 0
-    ORDER BY a.attendance_date DESC, a.attendance_time DESC
-    LIMIT 1
-  ) AS last_attendance,
-  (
-    SELECT COALESCE(SUM(p.amount), 0)
-    FROM payments p
-    WHERE p.student_id = s.id AND p.deleted = 0
-  ) AS paid_amount,
-  (
-    SELECT sub.required_amount
-    FROM subscriptions sub
-    WHERE sub.student_id = s.id 
-      AND EXTRACT(MONTH FROM sub.month) = EXTRACT(MONTH FROM CURRENT_DATE)
-      AND EXTRACT(YEAR FROM sub.month) = EXTRACT(YEAR FROM CURRENT_DATE)
-      AND sub.deleted = 0
-    LIMIT 1
-  ) AS required_amount
+  gr.name AS group_name
 FROM students s
 LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
 LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
@@ -415,18 +28,30 @@ WHERE s.deleted = 0
   AND ($2::int IS NULL OR s.grade_id = $2::int)
   AND ($3::int IS NULL OR s.group_id = $3::int)
 ORDER BY s.full_name ASC
-LIMIT $4 OFFSET $5
+LIMIT 20 OFFSET (($4::int - 1) * 20)
 `;
 
-const getStudentsCount = `
-SELECT COUNT(*) AS count
+// Get a single student by ID
+const getStudentById = `
+SELECT 
+  s.id,
+  s.barcode,
+  s.full_name,
+  s.phone,
+  s.parent_phone,
+  s.profile_image,
+  s.notes,
+  s.grade_id,
+  g.name AS grade_name,
+  s.group_id,
+  gr.name AS group_name
 FROM students s
-WHERE s.deleted = 0
-  AND ($1 = '' OR s.full_name ILIKE $1 OR s.barcode ILIKE $1 OR s.phone ILIKE $1)
-  AND ($2::int IS NULL OR s.grade_id = $2::int)
-  AND ($3::int IS NULL OR s.group_id = $3::int)
+LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
+LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
+WHERE s.id = $1 AND s.deleted = 0
 `;
 
+// Get a student by barcode
 const getStudentByBarcode = `
 SELECT 
   s.id,
@@ -434,8 +59,7 @@ SELECT
   s.full_name,
   s.phone,
   s.parent_phone,
-  s.platform_account_active,
-  s.active,
+  s.profile_image,
   s.grade_id,
   g.name AS grade_name,
   s.group_id,
@@ -446,16 +70,15 @@ LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
 WHERE s.barcode = $1 AND s.deleted = 0
 `;
 
-const getStudentById = `
+// Find a student by phone number
+const findStudentByPhone = `
 SELECT 
   s.id,
   s.barcode,
   s.full_name,
   s.phone,
   s.parent_phone,
-  s.platform_account_active,
-  s.active,
-  s.notes,
+  s.profile_image,
   s.grade_id,
   g.name AS grade_name,
   s.group_id,
@@ -463,194 +86,668 @@ SELECT
 FROM students s
 LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
 LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
+WHERE s.phone = $1 AND s.deleted = 0
+`;
+
+// Find students by parent phone number
+const findStudentByParentPhone = `
+SELECT 
+  s.id,
+  s.barcode,
+  s.full_name,
+  s.phone,
+  s.parent_phone,
+  s.profile_image,
+  s.grade_id,
+  g.name AS grade_name,
+  s.group_id,
+  gr.name AS group_name
+FROM students s
+LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
+LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
+WHERE s.parent_phone = $1 AND s.deleted = 0
+`;
+
+// Get all students in a specific grade - 20 per page
+const getStudentsByGradeId = `
+SELECT 
+  s.id,
+  s.barcode,
+  s.full_name,
+  s.phone,
+  s.parent_phone,
+  s.profile_image,
+  s.group_id,
+  gr.name AS group_name
+FROM students s
+LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
+WHERE s.grade_id = $1 AND s.deleted = 0
+ORDER BY s.full_name ASC
+LIMIT 20 OFFSET (($2::int - 1) * 20)
+`;
+
+// Get all students in a specific group - 20 per page
+const getStudentsByGroupId = `
+SELECT 
+  s.id,
+  s.barcode,
+  s.full_name,
+  s.phone,
+  s.parent_phone,
+  s.profile_image,
+  s.grade_id,
+  g.name AS grade_name
+FROM students s
+LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
+WHERE s.group_id = $1 AND s.deleted = 0
+ORDER BY s.full_name ASC
+LIMIT 20 OFFSET (($2::int - 1) * 20)
+`;
+
+// Get all deleted students - 20 per page
+const getDeletedStudents = `
+SELECT 
+  s.id,
+  s.barcode,
+  s.full_name,
+  s.phone,
+  s.parent_phone,
+  s.profile_image,
+  s.grade_id,
+  g.name AS grade_name,
+  s.group_id,
+  gr.name AS group_name,
+  s.deleted
+FROM students s
+LEFT JOIN grades g ON s.grade_id = g.id
+LEFT JOIN groups gr ON s.group_id = gr.id
+WHERE s.deleted = 1
+ORDER BY s.full_name ASC
+LIMIT 20 OFFSET (($1::int - 1) * 20)
+`;
+
+// Update a student's full information
+const updateStudent = `
+UPDATE students 
+SET 
+  barcode = $1,
+  full_name = $2,
+  phone = $3,
+  parent_phone = $4,
+  grade_id = $5,
+  group_id = $6,
+  notes = $7,
+  updated_at = NOW()
+WHERE id = $8 AND deleted = 0
+RETURNING *
+`;
+
+// Update student's profile image
+const updateStudentProfileImage = `
+UPDATE students 
+SET profile_image = $1, updated_at = NOW()
+WHERE id = $2 AND deleted = 0
+RETURNING id, profile_image
+`;
+
+// Delete student's profile image (set to NULL)
+const deleteStudentProfileImage = `
+UPDATE students 
+SET profile_image = NULL, updated_at = NOW()
+WHERE id = $1 AND deleted = 0
+RETURNING id, profile_image
+`;
+
+// Get student's profile image only
+const getStudentProfileImage = `
+SELECT profile_image
+FROM students
+WHERE id = $1 AND deleted = 0
+`;
+
+// Update student's password
+const updateStudentPassword = `
+UPDATE students 
+SET password = $1, updated_at = NOW()
+WHERE id = $2 AND deleted = 0
+RETURNING id
+`;
+
+// Soft delete a student (set deleted = 1)
+const softDeleteStudent = `
+UPDATE students 
+SET deleted = 1, updated_at = NOW()
+WHERE id = $1 AND deleted = 0
+RETURNING id, deleted
+`;
+
+// Hard delete a student permanently
+const hardDeleteStudent = `
+DELETE FROM students 
+WHERE id = $1
+RETURNING id
+`;
+
+// Restore a soft-deleted student
+const restoreStudent = `
+UPDATE students 
+SET deleted = 0, updated_at = NOW()
+WHERE id = $1 AND deleted = 1
+RETURNING id, deleted
+`;
+
+// Get students count with filters
+const getStudentsCount = `
+SELECT COUNT(*) AS count
+FROM students s
+WHERE s.deleted = 0
+  AND ($1 = '' OR s.full_name ILIKE $1 OR s.barcode ILIKE $1 OR s.phone ILIKE $1)
+  AND ($2::int IS NULL OR s.grade_id = $2::int)
+  AND ($3::int IS NULL OR s.group_id = $3::int)
+`;
+
+//PART 2: PROFILE & STATISTICS
+
+// Get student full profile with all details
+const getStudentProfile = `
+SELECT 
+  s.id,
+  s.barcode,
+  s.full_name,
+  s.phone,
+  s.parent_phone,
+  s.parent_token,
+  s.profile_image,
+  s.notes,
+  s.grade_id,
+  g.name AS grade_name,
+  g.monthly_price,
+  s.group_id,
+  gr.name AS group_name,
+  gr.days,
+  gr.start_time,
+  gr.end_time,
+  gr.room
+FROM students s
+LEFT JOIN grades g ON s.grade_id = g.id AND g.deleted = 0
+LEFT JOIN groups gr ON s.group_id = gr.id AND gr.deleted = 0
 WHERE s.id = $1 AND s.deleted = 0
 `;
 
-const checkExamAvailability = `
+// Get student quick stats (attendance, exams, payments)
+const getStudentQuickStats = `
 SELECT 
-  oe.id,
+  (SELECT COUNT(*) FROM attendance WHERE student_id = $1) AS total_attendance_days,
+  (SELECT COUNT(*) FROM attendance WHERE student_id = $1 AND status = 'present') AS present_days,
+  (SELECT COUNT(*) FROM attendance WHERE student_id = $1 AND status = 'absent') AS absent_days,
+  ROUND(
+    (SELECT COUNT(*) FROM attendance WHERE student_id = $1 AND status = 'present')::numeric / 
+    NULLIF((SELECT COUNT(*) FROM attendance WHERE student_id = $1), 0) * 100, 2
+  ) AS attendance_percentage,
+  (SELECT COUNT(*) FROM exams e WHERE e.grade_id = (SELECT grade_id FROM students WHERE id = $1) AND e.deleted = 0) AS total_paper_exams,
+  (SELECT COUNT(*) FROM exam_results er WHERE er.student_id = $1) AS attended_paper_exams,
+  (SELECT ROUND(AVG(er.degree)::numeric, 2) FROM exam_results er WHERE er.student_id = $1) AS avg_paper_degree,
+  (SELECT MAX(er.degree) FROM exam_results er WHERE er.student_id = $1) AS highest_paper_degree,
+  (SELECT MIN(er.degree) FROM exam_results er WHERE er.student_id = $1) AS lowest_paper_degree,
+  (SELECT COUNT(*) FROM student_exams se WHERE se.student_id = $1 AND se.submitted_at IS NOT NULL) AS total_online_exams,
+  (SELECT ROUND(AVG(se.score)::numeric, 2) FROM student_exams se WHERE se.student_id = $1 AND se.submitted_at IS NOT NULL) AS avg_online_score,
+  (SELECT COALESCE(SUM(sub.required_amount), 0) FROM subscriptions sub WHERE sub.student_id = $1 AND sub.deleted = 0) AS total_required,
+  (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.student_id = $1) AS total_paid,
+  (SELECT COALESCE(SUM(sub.required_amount), 0) FROM subscriptions sub WHERE sub.student_id = $1 AND sub.deleted = 0) - 
+  (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.student_id = $1) AS remaining_balance
+`;
+
+// Get student attendance history with month filter - 20 per page
+const getAttendanceHistory = `
+SELECT 
+  a.id,
+  a.attendance_date,
+  CASE 
+    WHEN EXTRACT(DOW FROM a.attendance_date) = 0 THEN 'الأحد'
+    WHEN EXTRACT(DOW FROM a.attendance_date) = 1 THEN 'الاثنين'
+    WHEN EXTRACT(DOW FROM a.attendance_date) = 2 THEN 'الثلاثاء'
+    WHEN EXTRACT(DOW FROM a.attendance_date) = 3 THEN 'الأربعاء'
+    WHEN EXTRACT(DOW FROM a.attendance_date) = 4 THEN 'الخميس'
+    WHEN EXTRACT(DOW FROM a.attendance_date) = 5 THEN 'الجمعة'
+    WHEN EXTRACT(DOW FROM a.attendance_date) = 6 THEN 'السبت'
+  END AS day_name,
+  a.status,
+  a.attendance_time,
+  a.method,
+  a.is_makeup,
+  a.notes,
+  gr.name AS group_name
+FROM attendance a
+LEFT JOIN groups gr ON a.group_id = gr.id
+WHERE a.student_id = $1
+  AND ($2 = '' OR TO_CHAR(a.attendance_date, 'YYYY-MM') = $2)
+ORDER BY a.attendance_date DESC
+LIMIT 20 OFFSET (($3::int - 1) * 20)
+`;
+
+// Get monthly attendance statistics
+const getMonthlyAttendanceStats = `
+SELECT 
+  TO_CHAR(a.attendance_date, 'YYYY-MM') AS month,
+  COUNT(a.id) AS total_days,
+  COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS present_days,
+  COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absent_days,
+  ROUND(
+    (COUNT(CASE WHEN a.status = 'present' THEN 1 END)::numeric / 
+    NULLIF(COUNT(a.id), 0)) * 100, 2
+  ) AS attendance_percentage
+FROM attendance a
+WHERE a.student_id = $1
+GROUP BY TO_CHAR(a.attendance_date, 'YYYY-MM')
+ORDER BY month DESC
+`;
+
+// Get total attendance for a specific month
+const getStudentTotalAttendance = `
+SELECT 
+  TO_CHAR(a.attendance_date, 'YYYY-MM') AS month,
+  COUNT(a.id) AS total_days,
+  COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS present_days,
+  COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absent_days,
+  ROUND(
+    (COUNT(CASE WHEN a.status = 'present' THEN 1 END)::numeric / 
+    NULLIF(COUNT(a.id), 0)) * 100, 2
+  ) AS attendance_percentage
+FROM attendance a
+WHERE a.student_id = $1
+  AND TO_CHAR(a.attendance_date, 'YYYY-MM') = $2
+GROUP BY TO_CHAR(a.attendance_date, 'YYYY-MM')
+`;
+
+// Get consecutive absences (3 or more in a row)
+const getConsecutiveAbsences = `
+WITH ranked_attendance AS (
+  SELECT 
+    a.attendance_date,
+    a.status,
+    SUM(CASE WHEN a.status != 'absent' THEN 1 ELSE 0 END) 
+      OVER (ORDER BY a.attendance_date DESC) AS group_id
+  FROM attendance a
+  WHERE a.student_id = $1
+)
+SELECT 
+  COUNT(*) AS consecutive_absences,
+  MIN(attendance_date) AS from_date,
+  MAX(attendance_date) AS to_date
+FROM ranked_attendance
+WHERE status = 'absent' AND group_id = 0
+`;
+
+// Get student payment history with month filter - 20 per page
+const getPaymentHistory = `
+SELECT 
+  p.id,
+  p.amount,
+  p.payment_date,
+  p.notes,
+  sub.month AS subscription_month,
+  sub.required_amount
+FROM payments p
+LEFT JOIN subscriptions sub ON p.subscription_id = sub.id
+WHERE p.student_id = $1
+  AND ($2 = '' OR TO_CHAR(p.payment_date, 'YYYY-MM') = $2)
+ORDER BY p.payment_date DESC
+LIMIT 20 OFFSET (($3::int - 1) * 20)
+`;
+
+// Get remaining balance for a student
+const getRemainingBalance = `
+SELECT 
+  (SELECT COALESCE(SUM(sub.required_amount), 0) FROM subscriptions sub WHERE sub.student_id = $1 AND sub.deleted = 0) AS total_required,
+  (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.student_id = $1) AS total_paid,
+  (SELECT COALESCE(SUM(sub.required_amount), 0) FROM subscriptions sub WHERE sub.student_id = $1 AND sub.deleted = 0) - 
+  (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.student_id = $1) AS remaining_balance
+`;
+
+// Get current month subscription
+const getCurrentSubscription = `
+SELECT 
+  sub.id,
+  sub.month,
+  sub.required_amount,
+  sub.status,
+  (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.subscription_id = sub.id) AS paid_amount,
+  sub.required_amount - (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.subscription_id = sub.id) AS remaining_amount
+FROM subscriptions sub
+WHERE sub.student_id = $1 
+  AND sub.deleted = 0
+  AND sub.month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+`;
+
+//PART 3: EXAMS, ASSIGNMENTS & CONTENT
+
+// Get all paper exams with student status - month filter - 20 per page
+const getStudentPaperExams = `
+SELECT 
+  e.id AS exam_id,
+  e.title AS exam_title,
+  e.exam_date,
+  e.total_degree,
+  er.degree AS student_degree,
+  CASE 
+    WHEN er.degree IS NOT NULL THEN 'attended'
+    ELSE 'absent'
+  END AS exam_status,
+  CASE 
+    WHEN er.degree IS NOT NULL THEN ROUND((er.degree::numeric / NULLIF(e.total_degree::numeric, 0)) * 100, 2)
+    ELSE NULL
+  END AS percentage
+FROM exams e
+LEFT JOIN exam_results er ON e.id = er.exam_id AND er.student_id = $1
+WHERE e.grade_id = (SELECT grade_id FROM students WHERE id = $1)
+  AND e.deleted = 0
+  AND ($2 = '' OR TO_CHAR(e.exam_date, 'YYYY-MM') = $2)
+ORDER BY e.exam_date DESC
+LIMIT 20 OFFSET (($3::int - 1) * 20)
+`;
+
+// Get student exam results (attended exams only) - month filter - 20 per page
+const getStudentExamResults = `
+SELECT 
+  er.id AS result_id,
+  er.degree,
+  er.notes,
+  e.title AS exam_title,
+  e.total_degree,
+  e.exam_date,
+  ROUND((er.degree::numeric / NULLIF(e.total_degree::numeric, 0)) * 100, 2) AS percentage
+FROM exam_results er
+JOIN exams e ON er.exam_id = e.id
+WHERE er.student_id = $1
+  AND ($2 = '' OR TO_CHAR(e.exam_date, 'YYYY-MM') = $2)
+ORDER BY e.exam_date DESC
+LIMIT 20 OFFSET (($3::int - 1) * 20)
+`;
+
+// Get available online exams for student - 20 per page
+const getAvailableOnlineExams = `
+SELECT 
+  oe.id AS exam_id,
+  oe.title AS exam_title,
+  oe.description,
+  oe.duration_minutes,
+  oe.full_mark,
   oe.start_at,
   oe.end_at,
   oe.randomize_questions,
-  oe.duration_minutes,
-  oe.full_mark
+  (SELECT COUNT(*) FROM questions q WHERE q.exam_id = oe.id) AS questions_count,
+  CASE 
+    WHEN oe.start_at > NOW() THEN 'upcoming'
+    WHEN oe.end_at < NOW() THEN 'expired'
+    ELSE 'available'
+  END AS exam_status,
+  CASE 
+    WHEN EXISTS (SELECT 1 FROM student_exams se WHERE se.exam_id = oe.id AND se.student_id = $1 AND se.submitted_at IS NOT NULL) THEN true
+    ELSE false
+  END AS attempted
 FROM online_exams oe
-JOIN students s ON oe.grade_id = s.grade_id
-WHERE oe.id = $1 AND s.id = $2 AND s.deleted = 0
+WHERE oe.grade_id = (SELECT grade_id FROM students WHERE id = $1)
+  AND oe.deleted = 0
+  AND (oe.group_id IS NULL OR oe.group_id = (SELECT group_id FROM students WHERE id = $1))
+ORDER BY oe.start_at DESC
+LIMIT 20 OFFSET (($2::int - 1) * 20)
 `;
 
-const checkExistingAttempt = `
-SELECT id FROM student_exams
-WHERE exam_id = $1 AND student_id = $2 AND submitted_at IS NOT NULL
-`;
-
-const createExamAttempt = `
-INSERT INTO student_exams (exam_id, student_id, score, total_questions, correct_answers, started_at)
-VALUES ($1, $2, 0, 0, 0, NOW())
-RETURNING id, started_at
-`;
-
-const getCorrectAnswers = `
+// Get student's submitted online exams - month filter - 20 per page
+const getStudentOnlineExams = `
 SELECT 
-  q.id AS question_id,
-  o.id AS correct_option_id
-FROM questions q
-LEFT JOIN options o ON q.id = o.question_id AND o.is_correct = 1
-WHERE q.exam_id = $1
+  se.id AS attempt_id,
+  oe.title AS exam_title,
+  oe.full_mark,
+  se.score,
+  ROUND((se.score::numeric / NULLIF(oe.full_mark::numeric, 0)) * 100, 2) AS percentage,
+  se.started_at,
+  se.submitted_at,
+  CASE 
+    WHEN se.score >= (oe.full_mark * 0.5) THEN 'passed'
+    ELSE 'failed'
+  END AS result_status
+FROM student_exams se
+JOIN online_exams oe ON se.exam_id = oe.id
+WHERE se.student_id = $1
+  AND se.submitted_at IS NOT NULL
+  AND ($2 = '' OR TO_CHAR(se.submitted_at, 'YYYY-MM') = $2)
+ORDER BY se.submitted_at DESC
+LIMIT 20 OFFSET (($3::int - 1) * 20)
 `;
 
-const insertBulkAnswers = `
-INSERT INTO student_answers (exam_id, student_id, question_id, selected_option_id, is_correct, submitted_at)
-SELECT $1, $2, q.id, sa.option_id, 
-  CASE WHEN o.id IS NOT NULL AND o.is_correct = 1 THEN 1 ELSE 0 END,
-  NOW()
-FROM (
-  SELECT * FROM json_to_recordset($3::json) AS x(question_id int, option_id int)
-) sa
-JOIN questions q ON sa.question_id = q.id AND q.exam_id = $1
-LEFT JOIN options o ON sa.option_id = o.id AND o.question_id = q.id
-WHERE sa.option_id IS NOT NULL
-ON CONFLICT (exam_id, student_id, question_id) 
-DO UPDATE SET 
-  selected_option_id = EXCLUDED.selected_option_id,
-  is_correct = EXCLUDED.is_correct,
-  submitted_at = NOW()
-`;
-
-const calculateScoreBulk = `
+// Get student answers for a specific exam
+const getStudentExamAnswers = `
 SELECT 
-  COUNT(DISTINCT q.id) AS total_questions,
-  COUNT(CASE WHEN sa.is_correct = 1 THEN 1 END) AS correct_answers,
-  CAST(ROUND(
-    (COUNT(CASE WHEN sa.is_correct = 1 THEN 1 END)::numeric / 
-     NULLIF(COUNT(DISTINCT q.id), 0)) * 
-    (SELECT full_mark FROM online_exams WHERE id = $1)
-  , 2) AS FLOAT) AS score
-FROM questions q
-LEFT JOIN student_answers sa ON q.id = sa.question_id AND sa.exam_id = $1 AND sa.student_id = $2
-WHERE q.exam_id = $1
-`;
-
-const finalizeExamAttempt2 = `
-UPDATE student_exams
-SET 
-  score = $3,
-  total_questions = $4,
-  correct_answers = $5,
-  submitted_at = NOW()
-WHERE id = $1 AND student_id = $2 AND submitted_at IS NULL
-RETURNING id, submitted_at, score, total_questions, correct_answers
-`;
-
-const getExamQuestions = `
-SELECT 
-  q.id,
+  sa.id AS answer_id,
   q.question_text,
-  q.type,
-  q."order"
-FROM questions q
-WHERE q.exam_id = $1
-ORDER BY 
-  CASE WHEN $2 = 1 THEN RANDOM() ELSE q."order" END
-`;
-
-const getQuestionOptions = `
-SELECT 
-  o.id,
-  o.option_text,
-  o."order"
-FROM options o
-WHERE o.question_id = $1
-ORDER BY o."order"
-`;
-
-const checkActiveAttempt = `
-SELECT id FROM student_exams
-WHERE exam_id = $1 AND student_id = $2 AND submitted_at IS NULL
-`;
-
-const checkQuestionBelongsToExam = `
-SELECT id FROM questions
-WHERE id = $1 AND exam_id = $2
-`;
-
-const checkOptionBelongsToQuestion = `
-SELECT id, is_correct FROM options
-WHERE id = $1 AND question_id = $2
-`;
-
-const checkExistingAnswer = `
-SELECT id FROM student_answers
-WHERE exam_id = $1 AND student_id = $2 AND question_id = $3
-`;
-
-const insertAnswer = `
-INSERT INTO student_answers (exam_id, student_id, question_id, selected_option_id, is_correct, submitted_at)
-VALUES ($1, $2, $3, $4, $5, NOW())
-RETURNING id
-`;
-
-const updateAnswer = `
-UPDATE student_answers
-SET selected_option_id = $2, is_correct = $3, submitted_at = NOW()
-WHERE exam_id = $4 AND student_id = $5 AND question_id = $6
-RETURNING id
-`;
-
-const calculateScore = `
-SELECT 
-  COUNT(*) AS total_questions,
-  COUNT(CASE WHEN sa.is_correct = 1 THEN 1 END) AS correct_answers,
-  SUM(CASE WHEN sa.is_correct = 1 THEN 1 ELSE 0 END) AS score
+  q.type AS question_type,
+  o.option_text AS selected_option,
+  correct_o.option_text AS correct_option,
+  sa.is_correct,
+  sa.file_path
 FROM student_answers sa
+JOIN questions q ON sa.question_id = q.id
+LEFT JOIN options o ON sa.selected_option_id = o.id
+LEFT JOIN options correct_o ON q.id = correct_o.question_id AND correct_o.is_correct = 1
 WHERE sa.exam_id = $1 AND sa.student_id = $2
+ORDER BY q."order"
 `;
 
-const finalizeExamAttempt = `
-UPDATE student_exams
-SET 
-  score = $3,
-  total_questions = $4,
-  correct_answers = $5,
-  submitted_at = NOW()
-WHERE exam_id = $1 AND student_id = $2 AND submitted_at IS NULL
-RETURNING id
-`;
-
-const checkAssignmentAvailable = `
-SELECT a.id, a.deadline, a.is_closed
+// Get student assignments - month filter - 20 per page
+const getStudentAssignments = `
+SELECT 
+  a.id AS assignment_id,
+  a.title,
+  a.description,
+  a.file_path,
+  a.full_mark,
+  a.deadline,
+  a.is_closed,
+  asub.id AS submission_id,
+  asub.submitted_at,
+  asub.score AS submission_score,
+  asub.feedback,
+  CASE 
+    WHEN asub.score IS NOT NULL THEN 'graded'
+    WHEN asub.id IS NOT NULL THEN 'submitted'
+    WHEN a.deadline < NOW() THEN 'overdue'
+    ELSE 'pending'
+  END AS assignment_status
 FROM assignments a
-JOIN students s ON a.grade_id = s.grade_id
-WHERE a.id = $1 AND s.id = $2 AND s.deleted = 0
+LEFT JOIN assignment_submissions asub ON a.id = asub.assignment_id AND asub.student_id = $1
+WHERE a.grade_id = (SELECT grade_id FROM students WHERE id = $1)
+  AND a.deleted = 0
+  AND ($2 = '' OR TO_CHAR(a.deadline, 'YYYY-MM') = $2)
+ORDER BY a.deadline DESC
+LIMIT 20 OFFSET (($3::int - 1) * 20)
 `;
 
-const checkExistingSubmission = `
-SELECT id FROM assignment_submissions
-WHERE assignment_id = $1 AND student_id = $2
+// Get student submissions - month filter - 20 per page
+const getStudentSubmissions = `
+SELECT 
+  asub.id AS submission_id,
+  asub.file_path,
+  asub.score,
+  asub.feedback,
+  asub.submitted_at,
+  asub.reviewed_at,
+  a.title AS assignment_title,
+  a.full_mark,
+  a.deadline,
+  CASE 
+    WHEN asub.submitted_at <= a.deadline THEN 'on_time'
+    ELSE 'late'
+  END AS submission_timing
+FROM assignment_submissions asub
+JOIN assignments a ON asub.assignment_id = a.id
+WHERE asub.student_id = $1
+  AND ($2 = '' OR TO_CHAR(asub.submitted_at, 'YYYY-MM') = $2)
+ORDER BY asub.submitted_at DESC
+LIMIT 20 OFFSET (($3::int - 1) * 20)
 `;
 
-const submitAssignment = `
-INSERT INTO assignment_submissions (assignment_id, student_id, file_path, submitted_at)
-VALUES ($1, $2, $3, NOW())
-RETURNING id
+// Get student playlists
+const getStudentPlaylists = `
+SELECT 
+  p.id AS playlist_id,
+  p.title,
+  p.description,
+  (SELECT COUNT(*) FROM playlist_videos pv WHERE pv.playlist_id = p.id) AS videos_count,
+  (SELECT v.video_url FROM playlist_videos pv2 
+   JOIN videos v ON pv2.video_id = v.id 
+   WHERE pv2.playlist_id = p.id 
+   ORDER BY pv2.added_at ASC 
+   LIMIT 1) AS thumbnail_url
+FROM playlists p
+WHERE p.grade_id = (SELECT grade_id FROM students WHERE id = $1)
+ORDER BY p.title ASC
 `;
 
-const updateAssignmentSubmission = `
-UPDATE assignment_submissions
-SET file_path = $3, submitted_at = NOW(), score = NULL, feedback = NULL, reviewed_by = NULL, reviewed_at = NULL
-WHERE assignment_id = $1 AND student_id = $2
-RETURNING id
+// Get videos in a specific playlist
+const getPlaylistVideos = `
+SELECT 
+  v.id AS video_id,
+  v.title,
+  v.description,
+  v.video_url,
+  pv.added_at
+FROM videos v
+JOIN playlist_videos pv ON v.id = pv.video_id
+WHERE pv.playlist_id = $1
+ORDER BY pv.added_at ASC
+`;
+
+// Get specific paper exam details with rank
+const getStudentPaperExamById = `
+SELECT 
+  e.id AS exam_id,
+  e.title AS exam_title,
+  e.exam_date,
+  e.total_degree,
+  er.degree AS student_degree,
+  ROUND((er.degree::numeric / NULLIF(e.total_degree::numeric, 0)) * 100, 2) AS percentage,
+  CASE 
+    WHEN er.degree IS NOT NULL THEN 'attended'
+    ELSE 'absent'
+  END AS exam_status,
+  (SELECT COUNT(*) FROM exam_results er2 WHERE er2.exam_id = e.id AND er2.degree >= er.degree) AS student_rank,
+  (SELECT COUNT(*) FROM exam_results er3 WHERE er3.exam_id = e.id) AS total_students,
+  (SELECT MAX(er4.degree) FROM exam_results er4 WHERE er4.exam_id = e.id) AS highest_degree
+FROM exams e
+LEFT JOIN exam_results er ON e.id = er.exam_id AND er.student_id = $1
+WHERE e.id = $2 AND e.deleted = 0
+`;
+
+// Get specific online exam details with rank
+const getStudentOnlineExamById = `
+SELECT 
+  se.id AS attempt_id,
+  oe.title AS exam_title,
+  oe.full_mark,
+  se.score,
+  ROUND((se.score::numeric / NULLIF(oe.full_mark::numeric, 0)) * 100, 2) AS percentage,
+  se.started_at,
+  se.submitted_at,
+  ROUND(EXTRACT(EPOCH FROM (se.submitted_at - se.started_at)) / 60) AS duration_minutes,
+  CASE 
+    WHEN se.score >= (oe.full_mark * 0.5) THEN 'passed'
+    ELSE 'failed'
+  END AS result_status,
+  (SELECT COUNT(*) FROM student_answers sa WHERE sa.exam_id = oe.id AND sa.student_id = $1) AS total_questions,
+  (SELECT COUNT(*) FROM student_answers sa WHERE sa.exam_id = oe.id AND sa.student_id = $1 AND sa.is_correct = 1) AS correct_answers,
+  (SELECT COUNT(*) FROM student_answers sa WHERE sa.exam_id = oe.id AND sa.student_id = $1 AND sa.is_correct = 0) AS wrong_answers,
+  (SELECT COUNT(*) FROM student_exams se2 WHERE se2.exam_id = oe.id AND se2.score >= se.score) AS student_rank,
+  (SELECT COUNT(*) FROM student_exams se3 WHERE se3.exam_id = oe.id AND se3.submitted_at IS NOT NULL) AS total_students,
+  (SELECT MAX(se4.score) FROM student_exams se4 WHERE se4.exam_id = oe.id AND se4.submitted_at IS NOT NULL) AS highest_score
+FROM student_exams se
+JOIN online_exams oe ON se.exam_id = oe.id
+WHERE se.student_id = $1 AND se.id = $2 AND se.submitted_at IS NOT NULL
+`;
+
+// Get specific assignment details
+const getStudentAssignmentById = `
+SELECT 
+  a.id AS assignment_id,
+  a.title,
+  a.description,
+  a.file_path,
+  a.full_mark,
+  a.deadline,
+  a.is_closed,
+  g.name AS grade_name,
+  asub.id AS submission_id,
+  asub.file_path AS submission_file,
+  asub.score,
+  asub.feedback,
+  asub.submitted_at,
+  asub.reviewed_at,
+  CASE 
+    WHEN asub.submitted_at <= a.deadline THEN 'on_time'
+    ELSE 'late'
+  END AS submission_timing,
+  ROUND((asub.score::numeric / NULLIF(a.full_mark::numeric, 0)) * 100, 2) AS percentage
+FROM assignments a
+LEFT JOIN grades g ON a.grade_id = g.id
+LEFT JOIN assignment_submissions asub ON a.id = asub.assignment_id AND asub.student_id = $1
+WHERE a.id = $2 AND a.deleted = 0
+`;
+
+// Get specific submission details
+const getStudentSubmissionById = `
+SELECT 
+  asub.id AS submission_id,
+  asub.file_path,
+  asub.score,
+  asub.feedback,
+  asub.submitted_at,
+  asub.reviewed_at,
+  a.title AS assignment_title,
+  a.full_mark,
+  a.deadline,
+  g.name AS grade_name,
+  CASE 
+    WHEN asub.submitted_at <= a.deadline THEN 'on_time'
+    ELSE 'late'
+  END AS submission_timing,
+  ROUND((asub.score::numeric / NULLIF(a.full_mark::numeric, 0)) * 100, 2) AS percentage
+FROM assignment_submissions asub
+JOIN assignments a ON asub.assignment_id = a.id
+JOIN grades g ON a.grade_id = g.id
+WHERE asub.id = $1 AND asub.student_id = $2
 `;
 
 module.exports = {
+  // Part 1: CRUD & Search
+  createStudent,
+  getAllStudents,
+  getStudentById,
+  getStudentByBarcode,
+  findStudentByPhone,
+  findStudentByParentPhone,
+  getStudentsByGradeId,
+  getStudentsByGroupId,
+  getDeletedStudents,
+  updateStudent,
+  updateStudentProfileImage,
+  deleteStudentProfileImage,
+  getStudentProfileImage,
+  updateStudentPassword,
+  softDeleteStudent,
+  hardDeleteStudent,
+  restoreStudent,
+  getStudentsCount,
+  // Part 2: Profile & Statistics
   getStudentProfile,
   getStudentQuickStats,
   getAttendanceHistory,
   getMonthlyAttendanceStats,
+  getStudentTotalAttendance,
   getConsecutiveAbsences,
   getPaymentHistory,
   getRemainingBalance,
   getCurrentSubscription,
+  // Part 3: Exams, Assignments & Content
   getStudentPaperExams,
   getStudentExamResults,
   getAvailableOnlineExams,
@@ -660,29 +757,8 @@ module.exports = {
   getStudentSubmissions,
   getStudentPlaylists,
   getPlaylistVideos,
-  getAllStudents,
-  getStudentByBarcode,
-  getStudentById,
-  checkExamAvailability,
-  checkExistingAttempt,
-  createExamAttempt,
-  getExamQuestions,
-  getQuestionOptions,
-  checkActiveAttempt,
-  checkQuestionBelongsToExam,
-  checkOptionBelongsToQuestion,
-  checkExistingAnswer,
-  insertAnswer,
-  updateAnswer,
-  calculateScore,
-  finalizeExamAttempt,
-  checkAssignmentAvailable,
-  checkExistingSubmission,
-  submitAssignment,
-  updateAssignmentSubmission,
-  getCorrectAnswers,
-  insertBulkAnswers,
-  calculateScoreBulk,
-  finalizeExamAttempt2,
-  getStudentsCount,
+  getStudentPaperExamById,
+  getStudentOnlineExamById,
+  getStudentAssignmentById,
+  getStudentSubmissionById,
 };

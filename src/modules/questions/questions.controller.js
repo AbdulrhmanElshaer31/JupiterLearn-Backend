@@ -30,10 +30,10 @@ const getQuestionById = async (req, res, next) => {
 };
 const createQuestion = async (req, res, next) => {
   try {
-    const { examId, questionText, type, order } = req.body;
+    const { exam_id, question_text, type, order } = req.body;
     const question = await questionService.createQuestion(
-      examId,
-      questionText,
+      exam_id,
+      question_text,
       type,
       order,
     );
@@ -49,10 +49,10 @@ const createQuestion = async (req, res, next) => {
 
 const updateQuestion = async (req, res, next) => {
   try {
-    const { questionText, type, order } = req.body;
+    const { question_text, type, order } = req.body;
     const question = await questionService.updateQuestion(
       req.params.questionId,
-      questionText,
+      question_text,
       type,
       order,
     );

@@ -10,10 +10,7 @@ async function createExamResultsTable() {
       notes TEXT,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      is_synced INTEGER DEFAULT 1,
-      deleted INTEGER DEFAULT 0,
       UNIQUE(student_id, exam_id)
-
     )
   `);
 
@@ -23,12 +20,7 @@ async function createExamResultsTable() {
   await query(
     `CREATE INDEX IF NOT EXISTS idx_exam_results_student_id ON exam_results(student_id)`,
   );
-  await query(
-    `CREATE INDEX IF NOT EXISTS idx_exam_results_is_synced ON exam_results(is_synced)`,
-  );
-  await query(
-    `CREATE INDEX IF NOT EXISTS idx_exam_results_deleted ON exam_results(deleted)`,
-  );
+
   console.log("exam_results table created");
 }
 
