@@ -8,7 +8,7 @@ const swaggerOptions = {
       version: "1.0.0",
       description: "JupiterLearn Platform API Documentation",
     },
-    servers: [{ url: "https://jupiter-learn-backend.vercel.app" }],
+    servers: [{ url: "http://localhost:3000" }],
     components: {
       securitySchemes: {
         ApiAuth: {

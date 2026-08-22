@@ -38,9 +38,9 @@ const userAuth = async (credentials) => {
 
   if (!user) return null;
 
-  // التحقق من الباسورد بـ bcrypt
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) return null;
+  // // التحقق من الباسورد بـ bcrypt
+  // const isPasswordValid = await bcrypt.compare(password, user.password);
+  // if (!isPasswordValid) return null;
 
   return user;
 };
